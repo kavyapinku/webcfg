@@ -88,23 +88,43 @@ int writeToFile(char *filename, char *data)
 
 void test_webcfgpack_unpack()
 {
-	int len=0;
-	char subdocfile[64] = "../../tests/multiple-now.bin";
-	
-	char *binfileData = NULL;
-	int status = -1;
-	char* blobbuff = NULL; 
+	subdoc_t *packSubdocData = NULL;
+        size_t subdocPackSize = -1;
+        void *data = NULL;
+        
+        packSubdocData = ( subdoc_t * ) malloc( sizeof( subdoc_t ) );
+        
+        if( packSubdocData != NULL )
+        {
+            memset(packSubdocData, 0, sizeof(subdoc_t));
 
-	status = readFromFile(subdocfile , &binfileData , &len);
-	
-	printf("read status %d\n", status);
-	if(status == 1 )
-	{
-		blobbuff = ( char*)binfileData;
-		printf("blobbuff %s blob len %lu\n", blobbuff, strlen(blobbuff));
-	
-		webcfgPackUnpack(blobbuff);
-	}
+            packSubdocData->count = 4;
+            packSubdocData->subdoc_items = (struct subdoc *) malloc( sizeof(struct subdoc) * packSubdocData->count );
+            memset( packSubdocData->subdoc_items, 0, sizeof(struct subdoc) * packSubdocData->count);
+
+            packSubdocData->subdoc_items[0].name = strdup("blob1");
+            packSubdocData->subdoc_items[0].url = strdup("http://example.com/mac:112233445566/blob1");
+            packSubdocData->subdoc_items[0].version = 1234; 
+
+            packSubdocData->subdoc_items[1].name = strdup("blob2");
+            packSubdocData->subdoc_items[1].url = strdup("http:/example.com/<mac>/blob2");
+            packSubdocData->subdoc_items[1].version = 3366;
+
+            packSubdocData->subdoc_items[2].name = strdup("blob3");
+            packSubdocData->subdoc_items[2].url = strdup("$host/example.com/<mac>/blob3");
+            packSubdocData->subdoc_items[2].version = 1357;
+
+            packSubdocData->subdoc_items[3].name = strdup("blob4");
+            packSubdocData->subdoc_items[3].url = strdup("$host/example.com<mac>/blob4");
+            packSubdocData->subdoc_items[3].version = 65535;
+        }
+
+        printf("webcfg_pack_subdoc\n");
+	subdocPackSize = webcfg_pack_subdoc( packSubdocData, &data );
+	printf("subdocPackSize is %ld\n", subdocPackSize);
+	printf("data packed is %s\n", (char*)data);
+        
+        webcfgPackUnpack(data);
 }
 
 void webcfgPackUnpack(char *blob)
@@ -120,8 +140,9 @@ void webcfgPackUnpack(char *blob)
 		memset(packRootData, 0, sizeof(data_t));
 
 		packRootData->count = 1;
-		packRootData->data_items = (struct data *) malloc( sizeof(data) * packRootData->count );
-		memset( packRootData->data_items, 0, sizeof(data) * packRootData->count );
+                packRootData->version = strdup("154363892090392891829182011");
+		packRootData->data_items = (struct rootdata *) malloc( sizeof(struct rootdata) * packRootData->count );
+		memset( packRootData->data_items, 0, sizeof(struct rootdata) * packRootData->count );
 
 		packRootData->data_items[0].name = strdup("Device.X_RDK_WebConfig.RootConfig.Data");
 		packRootData->data_items[0].value = strdup(blob);
@@ -154,6 +175,7 @@ void webcfgPackUnpack(char *blob)
 			CU_ASSERT_FATAL( NULL != pm );
 			CU_ASSERT_FATAL( NULL != pm->entries );
 			CU_ASSERT_FATAL( 1 == pm->entries_count );
+                        //CU_ASSERT_STRING_EQUAL("154363892090392891829182011",pm->version);
 			CU_ASSERT_STRING_EQUAL( "Device.X_RDK_WebConfig.RootConfig.Data", pm->entries[0].name );
 			CU_ASSERT_STRING_EQUAL( blob, pm->entries[0].value );
 			CU_ASSERT_FATAL( 2 == pm->entries[0].type );
@@ -194,6 +216,7 @@ void webcfgPackUnpack(char *blob)
 			CU_ASSERT_STRING_EQUAL( "blob4", rpm->entries[3].name );
 			CU_ASSERT_STRING_EQUAL( "$host/example.com<mac>/blob4", rpm->entries[3].url );
 			CU_ASSERT_FATAL( 65535 == rpm->entries[3].version );
+
 
 			for(i = 0; i < (int)rpm->entries_count ; i++)
 			{

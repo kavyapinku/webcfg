@@ -72,7 +72,77 @@ static void __msgpack_pack_string_nvp( msgpack_packer *pk,
     }
 }
 
+ssize_t webcfg_pack_subdoc(const subdoc_t *subdocData,void **data)
+{
+    size_t rv = -1;
+    int i = 0;
 
+    msgpack_sbuffer sbuf;
+    msgpack_packer pk;
+    msgpack_sbuffer_init( &sbuf );
+    msgpack_packer_init( &pk, &sbuf, msgpack_sbuffer_write );
+    msgpack_zone mempool;
+    msgpack_object deserialized;
+
+    if( subdocData != NULL && subdocData->count != 0)
+    {
+        int count = subdocData->count;
+        msgpack_pack_array( &pk, count );
+                
+        for( i = 0; i < count; i++ )
+        {
+             msgpack_pack_map( &pk, 3);//name, url, version
+
+             struct webcfg_token SUBDOC_MAP_NAME;
+             
+             SUBDOC_MAP_NAME.name = "name";
+             SUBDOC_MAP_NAME.length = strlen( "name" );
+             __msgpack_pack_string_nvp( &pk, &SUBDOC_MAP_NAME, subdocData->subdoc_items[i].name );
+
+             struct webcfg_token SUBDOC_MAP_URL;
+             
+             SUBDOC_MAP_URL.name = "url";
+             SUBDOC_MAP_URL.length = strlen( "url" );
+             __msgpack_pack_string_nvp( &pk, &SUBDOC_MAP_URL, subdocData->subdoc_items[i].url );
+ 
+             struct webcfg_token SUBDOC_MAP_VERSION;
+             
+             SUBDOC_MAP_VERSION.name = "version";
+             SUBDOC_MAP_VERSION.length = strlen( "version" );
+             __msgpack_pack_string( &pk, SUBDOC_MAP_VERSION.name, SUBDOC_MAP_VERSION.length );
+	     msgpack_pack_int(&pk, subdocData->subdoc_items[i].version );
+       }
+         
+    }
+    else 
+    {
+        printf("parameters is NULL\n" );
+        return rv;
+    }
+
+    if( sbuf.data ) 
+    {
+        *data = ( char * ) malloc( sizeof( char ) * sbuf.size );
+
+        if( NULL != *data ) 
+        {
+            memcpy( *data, sbuf.data, sbuf.size );
+	    printf("sbuf.data of subdoc is %s sbuf.size %ld\n", sbuf.data, sbuf.size);
+            rv = sbuf.size;
+        }
+    }
+
+    msgpack_zone_init(&mempool, 2048);
+
+    msgpack_unpack(sbuf.data, sbuf.size, NULL, &mempool, &deserialized);
+    msgpack_object_print(stdout, deserialized);
+
+    msgpack_zone_destroy(&mempool);
+
+    msgpack_sbuffer_destroy( &sbuf );
+    return rv;
+    
+}
 
 ssize_t webcfg_pack_rootdoc( char *blob, const data_t *packData, void **data )
 {
@@ -81,11 +151,16 @@ ssize_t webcfg_pack_rootdoc( char *blob, const data_t *packData, void **data )
     msgpack_packer pk;
     msgpack_sbuffer_init( &sbuf );
     msgpack_packer_init( &pk, &sbuf, msgpack_sbuffer_write );
+
+    msgpack_zone mempool;
+    msgpack_object deserialized;
+    
     int i =0;
 
     if( packData != NULL && packData->count != 0 ) {
 	int count = packData->count;
-	msgpack_pack_map( &pk, 1);
+
+  	msgpack_pack_map( &pk, 2);
         __msgpack_pack_string( &pk, WEBCFG_PARAMETERS.name, WEBCFG_PARAMETERS.length );
 	msgpack_pack_array( &pk, count );
         
@@ -113,6 +188,14 @@ ssize_t webcfg_pack_rootdoc( char *blob, const data_t *packData, void **data )
 	    msgpack_pack_int(&pk, 2 );
 	}
 
+	struct webcfg_token WEBCFG_MAP_VERSION;
+
+        WEBCFG_MAP_VERSION.name = "version";
+       WEBCFG_MAP_VERSION.length = strlen( "version" );
+	__msgpack_pack_string_nvp( &pk, &WEBCFG_MAP_VERSION, "154363892090392891829182011" );
+       
+        
+
     } else {
         printf("parameters is NULL\n" );
         return rv;
@@ -123,11 +206,18 @@ ssize_t webcfg_pack_rootdoc( char *blob, const data_t *packData, void **data )
 
         if( NULL != *data ) {
             memcpy( *data, sbuf.data, sbuf.size );
-	    //printf("sbuf.data is %s sbuf.size %ld\n", sbuf.data, sbuf.size);
+	    printf("sbuf.data is %s sbuf.size %ld\n", sbuf.data, sbuf.size);
             rv = sbuf.size;
         }
     }
 
+    msgpack_zone_init(&mempool, 2048);
+    
+    printf("the value is :");
+    msgpack_unpack(sbuf.data, sbuf.size, NULL, &mempool, &deserialized);
+    msgpack_object_print(stdout, deserialized);
+
+    msgpack_zone_destroy(&mempool);
     msgpack_sbuffer_destroy( &sbuf );
     return rv;
 }

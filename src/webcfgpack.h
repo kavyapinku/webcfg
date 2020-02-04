@@ -28,7 +28,7 @@
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
 /*----------------------------------------------------------------------------*/
-struct data {
+struct rootdata {
     char *name;
     char *value;
     uint16_t type;
@@ -36,12 +36,36 @@ struct data {
 
 typedef struct data_struct {
     size_t count;
-    struct data *data_items;
+    struct rootdata *data_items;
+    char * version;
 } data_t;
+
+//for subdoc
+
+struct subdoc {
+    char *name;
+    char *url;
+    uint64_t version;
+};
+
+typedef struct subdoc_struct {
+    size_t count;
+    struct subdoc *subdoc_items;
+} subdoc_t;
 
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
+
+/**
+ *  Packs webconfig sub config doc.
+ *
+ *  @param 
+ *
+ *  @return 0 if the operation was a success, error otherwise
+ */
+
+ssize_t webcfg_pack_subdoc(const subdoc_t *subdocData,void **data);
 
 /**
  *  Packs webconfig root config doc.
@@ -50,6 +74,7 @@ typedef struct data_struct {
  *
  *  @return 0 if the operation was a success, error otherwise
  */
+
 ssize_t webcfg_pack_rootdoc( char *blob, const data_t *packData, void **data );
 
 

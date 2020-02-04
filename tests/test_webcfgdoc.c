@@ -140,6 +140,7 @@ void test_rootdoc()
 	CU_ASSERT_FATAL( NULL != rpm->entries );
 	CU_ASSERT_FATAL( 1 == rpm->entries_count );
 	CU_ASSERT_STRING_EQUAL( "Device.X_RDK_WebConfig.RootConfig.Data", rpm->entries[0].name );
+	//CU_ASSERT_STRING_EQUAL( "��value���name�radio�url�&$host/api/v1/device/<mac>/config/radio�version�", rpm->entries[0].value );
 	CU_ASSERT_FATAL( 0 == rpm->entries[0].type );
 
 	for(i = 0; i < (int)rpm->entries_count ; i++)
