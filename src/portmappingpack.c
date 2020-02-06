@@ -18,7 +18,7 @@
 #include <msgpack.h>
 
 #include "helpers.h"
-#include "webcfgpack.h"
+#include "portmappingpack.h"
 
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
@@ -28,7 +28,7 @@
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
 /*----------------------------------------------------------------------------*/
-struct webcfg_token {
+struct portmapping_token {
     const char *name;
     size_t length;
 };
@@ -50,10 +50,10 @@ struct webcfg_token {
 /*----------------------------------------------------------------------------*/
 /*                             Internal functions                             */
 /*----------------------------------------------------------------------------*/
-static const struct webcfg_token WEBCFG_PARAMETERS   = { .name = "parameters", .length = sizeof( "parameters" ) - 1 };
+static const struct portmapping_token PORTMAPPING_PARAMETERS   = { .name = "parameters", .length = sizeof( "parameters" ) - 1 };
 static void __msgpack_pack_string( msgpack_packer *pk, const void *string, size_t n );
 static void __msgpack_pack_string_nvp( msgpack_packer *pk,
-                                       const struct webcfg_token *token,
+                                       const struct portmapping_token *token,
                                        const char *val );
 
 static void __msgpack_pack_string( msgpack_packer *pk, const void *string, size_t n )
@@ -63,7 +63,7 @@ static void __msgpack_pack_string( msgpack_packer *pk, const void *string, size_
 }
 
 static void __msgpack_pack_string_nvp( msgpack_packer *pk,
-                                       const struct webcfg_token *token,
+                                       const struct portmapping_token *token,
                                        const char *val )
 {
     if( ( NULL != token ) && ( NULL != val ) ) {
@@ -72,7 +72,7 @@ static void __msgpack_pack_string_nvp( msgpack_packer *pk,
     }
 }
 
-ssize_t webcfg_pack_subdoc(const subdoc_t *subdocData,void **data)
+ssize_t portmap_pack_subdoc(const subdoc_t *subdocData,void **data)
 {
     size_t rv = -1;
     int i = 0;
@@ -91,26 +91,50 @@ ssize_t webcfg_pack_subdoc(const subdoc_t *subdocData,void **data)
                 
         for( i = 0; i < count; i++ )
         {
-             msgpack_pack_map( &pk, 3);//name, url, version
+             msgpack_pack_map( &pk, 6);
 
-             struct webcfg_token SUBDOC_MAP_NAME;
+             struct portmapping_token SUBDOC_MAP_INTERNALCLIENT;
              
-             SUBDOC_MAP_NAME.name = "name";
-             SUBDOC_MAP_NAME.length = strlen( "name" );
-             __msgpack_pack_string_nvp( &pk, &SUBDOC_MAP_NAME, subdocData->subdoc_items[i].name );
+             SUBDOC_MAP_INTERNALCLIENT.name = "InternalClient";
+             SUBDOC_MAP_INTERNALCLIENT.length = strlen( "InternalClient" );
+             __msgpack_pack_string_nvp( &pk, &SUBDOC_MAP_INTERNALCLIENT, subdocData->subdoc_items[i].internal_client );
+             
+             struct portmapping_token SUBDOC_MAP_EXTERNALPORTENDRANGE;
+             
+             SUBDOC_MAP_EXTERNALPORTENDRANGE.name = "ExternalPortEndRange";
+             SUBDOC_MAP_EXTERNALPORTENDRANGE.length = strlen( "ExternalPortEndRange" );
+             __msgpack_pack_string( &pk, SUBDOC_MAP_EXTERNALPORTENDRANGE.name, SUBDOC_MAP_EXTERNALPORTENDRANGE.length );
+	     msgpack_pack_int(&pk, subdocData->subdoc_items[i].external_port_end_range );
 
-             struct webcfg_token SUBDOC_MAP_URL;
+             struct portmapping_token SUBDOC_MAP_ENABLE;
              
-             SUBDOC_MAP_URL.name = "url";
-             SUBDOC_MAP_URL.length = strlen( "url" );
-             __msgpack_pack_string_nvp( &pk, &SUBDOC_MAP_URL, subdocData->subdoc_items[i].url );
- 
-             struct webcfg_token SUBDOC_MAP_VERSION;
+             SUBDOC_MAP_ENABLE.name = "Enable";
+             SUBDOC_MAP_ENABLE.length = strlen( "Enable" );
+             __msgpack_pack_string( &pk, SUBDOC_MAP_ENABLE.name, SUBDOC_MAP_ENABLE.length );
+             if( subdocData->subdoc_items[i].enable )
+                msgpack_pack_true(&pk);
+             else
+                msgpack_pack_false(&pk);
+
+             struct portmapping_token SUBDOC_MAP_PROTOCOL;
              
-             SUBDOC_MAP_VERSION.name = "version";
-             SUBDOC_MAP_VERSION.length = strlen( "version" );
-             __msgpack_pack_string( &pk, SUBDOC_MAP_VERSION.name, SUBDOC_MAP_VERSION.length );
-	     msgpack_pack_int(&pk, subdocData->subdoc_items[i].version );
+             SUBDOC_MAP_PROTOCOL.name = "Protocol";
+             SUBDOC_MAP_PROTOCOL.length = strlen( "Protocol" );
+             __msgpack_pack_string_nvp( &pk, &SUBDOC_MAP_PROTOCOL, subdocData->subdoc_items[i].protocol );
+
+             struct portmapping_token SUBDOC_MAP_DESCRIPTION;
+             
+             SUBDOC_MAP_DESCRIPTION.name = "Description";
+             SUBDOC_MAP_DESCRIPTION.length = strlen( "Description" );
+             __msgpack_pack_string_nvp( &pk, &SUBDOC_MAP_DESCRIPTION, subdocData->subdoc_items[i].description );
+
+             struct portmapping_token SUBDOC_MAP_EXTERNALPORT;
+             
+             SUBDOC_MAP_EXTERNALPORT.name = "ExternalPort";
+             SUBDOC_MAP_EXTERNALPORT.length = strlen( "ExternalPort" );
+             __msgpack_pack_string( &pk, SUBDOC_MAP_EXTERNALPORT.name, SUBDOC_MAP_EXTERNALPORT.length );
+	     msgpack_pack_int(&pk, subdocData->subdoc_items[i].external_port);
+
        }
          
     }
@@ -144,7 +168,7 @@ ssize_t webcfg_pack_subdoc(const subdoc_t *subdocData,void **data)
     
 }
 
-ssize_t webcfg_pack_rootdoc( char *blob, const data_t *packData, void **data )
+ssize_t portmap_pack_rootdoc( char *blob, const data_t *packData, void **data )
 {
     size_t rv = -1;
     msgpack_sbuffer sbuf;
@@ -161,38 +185,38 @@ ssize_t webcfg_pack_rootdoc( char *blob, const data_t *packData, void **data )
 	int count = packData->count;
 
   	msgpack_pack_map( &pk, 2);
-        __msgpack_pack_string( &pk, WEBCFG_PARAMETERS.name, WEBCFG_PARAMETERS.length );
+        __msgpack_pack_string( &pk, PORTMAPPING_PARAMETERS.name, PORTMAPPING_PARAMETERS.length );
 	msgpack_pack_array( &pk, count );
         
 	msgpack_pack_map( &pk, 3); //name, value, type
 
 	for( i = 0; i < count; i++ ) //1 element
 	{
-	    struct webcfg_token WEBCFG_MAP_NAME;
+	    struct portmapping_token PORTMAPPING_MAP_NAME;
 
-            WEBCFG_MAP_NAME.name = "name";
-            WEBCFG_MAP_NAME.length = strlen( "name" );
-            __msgpack_pack_string_nvp( &pk, &WEBCFG_MAP_NAME, "Device.X_RDK_WebConfig.RootConfig.Data" );
+            PORTMAPPING_MAP_NAME.name = "name";
+            PORTMAPPING_MAP_NAME.length = strlen( "name" );
+            __msgpack_pack_string_nvp( &pk, &PORTMAPPING_MAP_NAME, "Device.NAT.PortMapping." );
 
-	    struct webcfg_token WEBCFG_MAP_VALUE;
+	    struct portmapping_token PORTMAPPING_MAP_VALUE;
 
-            WEBCFG_MAP_VALUE.name = "value";
-            WEBCFG_MAP_VALUE.length = strlen( "value" );
-	    __msgpack_pack_string_nvp( &pk, &WEBCFG_MAP_VALUE, blob );
+            PORTMAPPING_MAP_VALUE.name = "value";
+            PORTMAPPING_MAP_VALUE.length = strlen( "value" );
+	    __msgpack_pack_string_nvp( &pk, &PORTMAPPING_MAP_VALUE, blob );
 
-	    struct webcfg_token WEBCFG_MAP_TYPE;
+	    struct portmapping_token PORTMAPPING_MAP_TYPE;
 
-            WEBCFG_MAP_TYPE.name = "datatype";
-            WEBCFG_MAP_TYPE.length = strlen( "datatype" );
-             __msgpack_pack_string( &pk, WEBCFG_MAP_TYPE.name, WEBCFG_MAP_TYPE.length );
+            PORTMAPPING_MAP_TYPE.name = "datatype";
+            PORTMAPPING_MAP_TYPE.length = strlen( "datatype" );
+             __msgpack_pack_string( &pk, PORTMAPPING_MAP_TYPE.name, PORTMAPPING_MAP_TYPE.length );
 	    msgpack_pack_int(&pk, 2 );
 	}
 
-	struct webcfg_token WEBCFG_MAP_VERSION;
+	struct portmapping_token PORTMAPPING_MAP_VERSION;
 
-        WEBCFG_MAP_VERSION.name = "version";
-        WEBCFG_MAP_VERSION.length = strlen( "version" );
-	__msgpack_pack_string_nvp( &pk, &WEBCFG_MAP_VERSION, "154363892090392891829182011" );
+        PORTMAPPING_MAP_VERSION.name = "version";
+        PORTMAPPING_MAP_VERSION.length = strlen( "version" );
+	__msgpack_pack_string_nvp( &pk, &PORTMAPPING_MAP_VERSION, "154363892090392891829182011" );
        
         
 
@@ -221,5 +245,9 @@ ssize_t webcfg_pack_rootdoc( char *blob, const data_t *packData, void **data )
     msgpack_sbuffer_destroy( &sbuf );
     return rv;
 }
+
+
+
+
 
 

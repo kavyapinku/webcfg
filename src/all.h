@@ -22,7 +22,7 @@
 #include "envelope.h"
 #include "firewall.h"
 #include "gre.h"
-#include "portmapping.h"
+#include "portmappingparam.h"
 #include "wifi.h"
 #include "xdns.h"
 

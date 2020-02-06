@@ -19,6 +19,7 @@
 
 #include "helpers.h"
 #include "webcfgdoc.h"
+#include "portmappingdoc.h"
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
@@ -68,26 +69,37 @@ void* helper_convert( const void *buf, size_t len,
 	    printf("mp_rv is %d MSGPACK_UNPACK_SUCCESS %d offset %lu\n", mp_rv, MSGPACK_UNPACK_SUCCESS, offset);
 	msgpack_object obj = msg.data;
 	msgpack_object_print(stdout, obj);
-            printf("\nMSGPACK_OBJECT_MAP is %d  msg.data.type %d\n", MSGPACK_OBJECT_MAP, msg.data.type);
+            printf("\nMSGPACK_OBJECT_MAP is a %d  msg.data.type %d\n", MSGPACK_OBJECT_MAP, msg.data.type);
 
             if( (MSGPACK_UNPACK_SUCCESS == mp_rv) && (0 != offset) &&
                 (MSGPACK_OBJECT_MAP == msg.data.type) )
             {
                 msgpack_object *inner;
+                msgpack_object *version;
 
                 inner = &msg.data;
                 if( NULL != wrapper ) {
+                    printf("wrapper\n");
                     inner = __finder( wrapper, expect_type, &msg.data.via.map );
+                    printf("after par");
+                    version = __finder( "version", MSGPACK_OBJECT_MAP, &msg.data.via.map);
+                    msgpack_object_print(stdout, *inner);
+                    printf("version : \n");
+                   msgpack_object_print(stdout, *version);
                 }
-
+                
+                printf("after");
                 if( ((true == optional) && (NULL == inner)) ||
-                    ((NULL != inner) && (0 == (process)(p, inner))) )
+                    ((NULL != inner) && (0 == (process)(p, inner))) || 
+                    ((NULL != version) && (0 == (process)(p, version))) )
                 {
                     msgpack_unpacked_destroy( &msg );
+                    printf("success\n");
                     errno = HELPERS_OK;
                     return p;
                 }
             } else {
+                printf("failed\n");
                 errno = HELPERS_INVALID_FIRST_ELEMENT;
             }
 
@@ -109,18 +121,32 @@ msgpack_object* __finder( const char *name,
                           msgpack_object_type expect_type,
                           msgpack_object_map *map )
 {
+    
     uint32_t i;
 
+    
+    printf("map size is %d\n",map->size); 
     for( i = 0; i < map->size; i++ ) {
         if( MSGPACK_OBJECT_STR == map->ptr[i].key.type ) {
+            printf("map key string is : %s\n",map->ptr[i].key.via.str.ptr);
             if( expect_type == map->ptr[i].val.type ) {
                 if( 0 == match(&(map->ptr[i]), name) ) {
                     return &map->ptr[i].val;
                 }
-            }
+            } 
+              
         }
+
+        if(0 == strncmp( map->ptr[i].key.via.str.ptr, "version",7))
+         {   printf("map key inside is : %s\n",map->ptr[i].key.via.str.ptr);
+             printf("map key inside is : %s\n",map->ptr[i].val.via.str.ptr);
+             return &map->ptr[i].val;  
+          }
     }
     errno = HELPERS_MISSING_WRAPPER;
     return NULL;
 }
+
+
+
 

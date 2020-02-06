@@ -94,7 +94,7 @@ target_link_libraries (test_http gcov -Wl,--no-as-needed )
 #   test_portmapping
 #-------------------------------------------------------------------------------
 add_test(NAME test_portmapping COMMAND ${MEMORY_CHECK} ./test_portmapping)
-add_executable(test_portmapping test_portmapping.c ../src/portmapping.c ../src/helpers.c)
+add_executable(test_portmapping test_portmapping.c ../src/portmappingdoc.c ../src/portmappingparam.c ../src/portmappingpack.c ../src/helpers.c ../src/array_helpers.c)
 target_link_libraries (test_portmapping -lcunit -lmsgpackc)
 
 target_link_libraries (test_portmapping gcov -Wl,--no-as-needed )
@@ -125,6 +125,7 @@ add_executable(test_webcfgpack test_webcfgpack.c ../src/webcfgdoc.c ../src/webcf
 target_link_libraries (test_webcfgpack -lcunit -lmsgpackc)
 
 target_link_libraries (test_webcfgpack gcov -Wl,--no-as-needed )
+
 
 #-------------------------------------------------------------------------------
 #   test_wifi

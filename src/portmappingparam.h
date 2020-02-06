@@ -13,27 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PORTMAPPING_H__
-#define __PORTMAPPING_H__
+#ifndef __PORTMAPPINGPARAM_H__
+#define __PORTMAPPINGPARAM_H__
 
 #include <stdint.h>
 #include <stdlib.h>
 
 typedef struct {
-    char      *protocol;        /* (R) V 1.0.0 */
-    uint16_t  port_range[2];    /* (R) V 1.0.0 */
-    uint16_t  target_port;      /* (R) V 1.0.0 */
-
-    uint8_t   ip_version;
-    union {
-        uint32_t v4;
-        uint8_t v6[16];
-    } ip;                       /* (R) V 1.0.0 */
+   char *name;
+   char *value;
+   uint16_t type;                       
 } pm_entry_t;
 
 typedef struct {
-    pm_entry_t *entries;        /* (O) V 1.0.0 */
+    pm_entry_t *entries;        
     size_t      entries_count;
+    char * version;
 } portmapping_t;
 
 /**
