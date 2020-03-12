@@ -23,6 +23,7 @@
 #include "../src/webcfg.h"
 #include "../src/multipart.h"
 #include "../src/helpers.h"
+#include "../src/webcfg_db.h"
 #include "../src/macbindingdoc.h"
 #include "../src/portmappingdoc.h"
 #include "../src/portmappingparam.h"
@@ -83,14 +84,7 @@ void setValues(const param_t paramVal[], const unsigned int paramCount, const in
 	UNUSED(ccspStatus);
 	return;
 }
-void setAttributes(param_t *attArr, const unsigned int paramCount, money_trace_spans *timeSpan, WDMP_STATUS *retStatus)
-{       UNUSED(attArr);
-	UNUSED(paramCount);
-	UNUSED(timeSpan);
-	UNUSED(retStatus);
-        return;
-       
-}
+
 int _setConfigVersion(int index, char *version)
 {
 	UNUSED(index);
