@@ -23,7 +23,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
-#define WEBCFG_DB_FILE 	    "/tmp/webconfig_db.bin" //TODO:command line argument to pass /nvram/webconfig_db.bin
+#define WEBCFG_DB_FILE 	    "/nvram/webconfig_db.bin" //TODO:command line argument to pass /nvram/webconfig_db.bin
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
 /*----------------------------------------------------------------------------*/
@@ -72,7 +72,7 @@ typedef struct blob{
  */
 int initDB(char * db_file_path);
 
-int addNewDocEntry(webconfig_db_t *subdoc);
+int addNewDocEntry(size_t count);
 
 webconfig_db_t* getDocEntry(char *doc_name);
 
@@ -80,10 +80,9 @@ int updateDocEntry(char *doc_name, webconfig_db_t *subdoc);
 
 int writeToDBFile(char * db_file_path, char * data);
 
+int generateBlob();
+
 blob_t * get_DB_BLOB();
-
-char * get_DB_BLOB_base64();
-
 
 webconfig_db_data_t * get_global_db_node(void);
 
@@ -98,6 +97,8 @@ int updateTmpList(char *docname, uint32_t version, char *status);
 int deleteFromTmpList(char* doc_name);
 
 int get_numOfMpDocs();
+
+void b64_encoder(const void *buf,size_t len, char ** decodeMsg);
 
 /**
  *  This function converts a msgpack buffer into an webconfig_db_t structure

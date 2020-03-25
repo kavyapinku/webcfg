@@ -48,6 +48,7 @@ enum {
 /*                            File Scoped Variables                           */
 /*----------------------------------------------------------------------------*/
 static webconfig_tmp_data_t * g_head = NULL;
+static blob_t * webcfgdb_blob = NULL;
 static int numOfMpDocs = 0;
 /*----------------------------------------------------------------------------*/
 /*                             Function Prototypes                            */
@@ -81,7 +82,7 @@ int initDB(char * db_file_path )
      data = (char *) malloc(sizeof(char) * (ch_count + 1));
      fread(data, 1, ch_count,fp);
      len = ch_count;
-    // (data)[ch_count] ='\0';
+     //(data)[ch_count] ='\0';
      fclose(fp);
 
      wd = ( webconfig_db_t * ) malloc( sizeof( webconfig_db_t ) );
@@ -121,18 +122,34 @@ int initDB(char * db_file_path )
      
 }
 
-int addNewDocEntry(webconfig_db_t *subdoc)
+int addNewDocEntry(size_t count)
 {    
      size_t webcfgdbPackSize = -1;
      void* data = NULL;
  
-     WebConfigLog("size of subdoc %ld\n", (size_t)subdoc);
-     webcfgdbPackSize = webcfgdb_pack(subdoc, &data);
+     WebConfigLog("size of subdoc %ld\n", (size_t)count);
+     webcfgdbPackSize = webcfgdb_pack(webcfgdb_data, &data, count);
      WebConfigLog("size of webcfgdbPackSize %ld\n", webcfgdbPackSize);
      WebConfigLog("writeToDBFile %s\n", WEBCFG_DB_FILE);
      writeToDBFile(WEBCFG_DB_FILE,(char *)data);
   
      return 0;
+}
+
+int generateBlob()
+{
+    size_t webcfgdbBlobPackSize = -1;
+    void * data = NULL;
+
+    webcfgdbBlobPackSize = webcfgdb_blob_pack(webcfgdb_data, g_head, &data);
+    
+    webcfgdb_blob = (blob_t *)malloc(sizeof(blob_t));
+    webcfgdb_blob->data = (char *)data;
+    webcfgdb_blob->len  = webcfgdbBlobPackSize;
+     
+    WebConfigLog("The webcfgdbBlobPackSize is : %ld\n",webcfgdb_blob->len);
+    WebConfigLog("The value of blob is %s\n",webcfgdb_blob->data);
+    return 1;
 }
 
 int writeToDBFile(char *db_file_path, char *data)
@@ -171,7 +188,7 @@ void webcfgdb_destroy( webconfig_db_t *wd )
         size_t i;
         for( i = 0; i < wd->entries_count; i++ ) {
             if( NULL != wd->entries[i].name ) {
-                //free( wd->entries[i].name );
+                free( wd->entries[i].name );
             }
 	    
         }
@@ -221,6 +238,11 @@ int get_numOfMpDocs()
     return numOfMpDocs;
 }
 
+blob_t * get_DB_BLOB()
+{
+     return webcfgdb_blob;
+}
+
 //new_node indicates the docs which need to be added to list
 int addToTmpList( multipart_t *mp)
 {
@@ -243,7 +265,7 @@ int addToTmpList( multipart_t *mp)
 			{
 				WebConfigLog("Adding root to tmp\n");
 				new_node->name = strdup("root");
-				new_node->version = 0;
+				new_node->version = (uint32_t)0;
 				new_node->status = strdup("pending");
 			}
 			else
@@ -292,8 +314,8 @@ int addToTmpList( multipart_t *mp)
 			retStatus = 1;
 		}
 	}
-	WebConfigLog("addToList return %d\n", retStatus);
-	return retStatus;
+    WebConfigLog("addToList return %d\n", retStatus);
+    return retStatus;
 }
 
 //update version, status for each doc
@@ -396,7 +418,7 @@ int process_webcfgdbparams( webconfig_db_data_t *e, msgpack_object_map *map )
                 {
                     if( UINT32_MAX < p->val.via.u64 )
                     {
-			//printf("e->type is %d\n", e->type);
+			//WebConfigLog("e->type is %d\n", e->type);
                         errno = WD_INVALID_DATATYPE;
                         return -1;
                     }
@@ -406,7 +428,7 @@ int process_webcfgdbparams( webconfig_db_data_t *e, msgpack_object_map *map )
 			WebConfigLog("e->version is %lu\n", (long)e->version);
                     }
                     objects_left &= ~(1 << 1);
-		    //printf("objects_left after datatype %d\n", objects_left);
+		    //WebConfigLog("objects_left after datatype %d\n", objects_left);
                 }
                 
             }
@@ -417,7 +439,7 @@ int process_webcfgdbparams( webconfig_db_data_t *e, msgpack_object_map *map )
                     e->name = strndup( p->val.via.str.ptr, p->val.via.str.size );
 		    WebConfigLog("e->name is %s\n", e->name);
                     objects_left &= ~(1 << 0);
-		    //printf("objects_left after name %d\n", objects_left);
+		    //WebConfigLog("objects_left after name %d\n", objects_left);
                 }
             }
         }
@@ -437,7 +459,7 @@ int process_webcfgdbparams( webconfig_db_data_t *e, msgpack_object_map *map )
 
 int process_webcfgdb( webconfig_db_t *wd, msgpack_object *obj )
 {
-    //printf(" process_webcfgdbparam \n");
+    //WebConfigLog(" process_webcfgdbparam \n");
     msgpack_object_array *array = &obj->via.array;
     if( 0 < array->size )
     {
@@ -451,7 +473,7 @@ int process_webcfgdb( webconfig_db_t *wd, msgpack_object *obj )
             return -1;
         }
         
-        //printf("wd->entries_count %lu\n",wd->entries_count);
+        //WebConfigLog("wd->entries_count %lu\n",wd->entries_count);
         memset( wd->entries, 0, sizeof(webconfig_db_data_t) * wd->entries_count );
         for( i = 0; i < wd->entries_count; i++ )
         {
@@ -462,7 +484,7 @@ int process_webcfgdb( webconfig_db_t *wd, msgpack_object *obj )
             }
             if( 0 != process_webcfgdbparams(&wd->entries[i], &array->ptr[i].via.map) )
             {
-		//printf("process_webcfgdbparam failed\n");
+		//WebConfigLog("process_webcfgdbparam failed\n");
                 return -1;
             }
         }
@@ -498,3 +520,51 @@ void addToDBList(webconfig_db_data_t *webcfgdb)
          
       }
 }
+
+char * get_DB_BLOB_base64()
+{
+    char * decodeMsg = NULL;
+    blob_t * temp_blob = (blob_t *)malloc(sizeof(blob_t));
+    temp_blob = get_DB_BLOB();
+    b64_encoder(temp_blob->data, temp_blob->len, &decodeMsg);
+    return decodeMsg;
+}
+
+void b64_encoder(const void *buf,size_t len, char ** decodeMsg)
+{
+        char* b64buffer =  NULL;
+	size_t encodeSize = 0;
+        size_t size =0;
+	size_t decodeMsgSize =0;
+
+	WebConfigLog("-----------Start of Base64 Encode ------------\n");
+	encodeSize = b64_get_encoded_buffer_size( len );
+	WebConfigLog("encodeSize is %ld\n", encodeSize);
+	b64buffer = malloc(encodeSize+1);
+	b64_encode((const uint8_t *)buf, len, (uint8_t *)b64buffer);
+	b64buffer[encodeSize] = '\0' ;
+	WebConfigLog("---------- End of Base64 Encode -------------\n");
+
+	//WebConfigLog("Final Encoded data: %s\n",b64buffer);
+	WebConfigLog("Final Encoded data length: %ld\n",strlen(b64buffer));
+	/*********** base64 encode *****************/
+
+	//Start of b64 decoding
+	WebConfigLog("----Start of b64 decoding----\n");
+	decodeMsgSize = b64_get_decoded_buffer_size(strlen(b64buffer));
+	WebConfigLog("expected b64 decoded msg size : %ld bytes\n",decodeMsgSize);
+
+	*decodeMsg = (char *) malloc(sizeof(char) * decodeMsgSize);
+
+	size = b64_decode( (const uint8_t *)b64buffer, strlen(b64buffer), (uint8_t *)*decodeMsg );
+	WebConfigLog("base64 decoded data containing %ld bytes is :%s\n",size, *decodeMsg);
+
+	WebConfigLog("----End of b64 decoding----\n");
+
+	//End of b64 decoding
+
+	
+	WebConfigLog("----End of msgpack decoding----\n");
+
+}
+

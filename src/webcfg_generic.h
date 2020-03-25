@@ -43,6 +43,7 @@ int _setConfigVersion(int index, char *version);
 int setForceSync(char* pString, char *transactionId,int *session_status);
 int getForceSync(char** pString, char **transactionId);
 
+char * get_DB_BLOB_base64();
 char *get_global_systemReadyTime();
 char* getDeviceBootTime();
 char * getSerialNumber();
