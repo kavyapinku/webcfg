@@ -465,7 +465,7 @@ int processMsgpackSubdoc(multipart_t *mp)
 				WebConfigLog("After setValues\n");
 				WebcfgInfo("Processed WebConfig SET Request\n");
 				WebcfgInfo("ccspStatus is %d\n", ccspStatus);
-				//ret = WDMP_SUCCESS; //Remove this. Testing purpose.
+				ret = WDMP_FAILURE; //Remove this. Testing purpose.
 				if(ret == WDMP_SUCCESS)
 				{
 					WebConfigLog("setValues success. ccspStatus : %d\n", ccspStatus);
@@ -834,9 +834,10 @@ void getConfigVersionList(char **version)
 {
 	char *versionsList = NULL;
 	char *versionsList_tmp = NULL;
-	uint32_t root_version;
+	uint32_t root_version = 0;
 
 	get_root_version(&root_version);
+	WebConfigLog("root_version %lu\n", (long)root_version);
 
 	versionsList = (char*) malloc(512);
 	if(versionsList)
@@ -847,7 +848,11 @@ void getConfigVersionList(char **version)
 
 		if(NULL != temp)
 		{
-			sprintf(versionsList, "%lu", (long)root_version);
+			if(root_version)
+			{
+				WebConfigLog("Updating root_version to versionsList\n");
+				sprintf(versionsList, "%lu", (long)root_version);
+			}
 			WebConfigLog("versionsList is %s\n", versionsList);
 
 			while (NULL != temp)
