@@ -33,7 +33,7 @@
 #define CA_CERT_PATH 		   "/etc/ssl/certs/ca-certificates.crt"
 #define WEBPA_READ_HEADER          "/etc/parodus/parodus_read_file.sh"
 #define WEBPA_CREATE_HEADER        "/etc/parodus/parodus_create_file.sh"
-#define WEBCFG_URL_FILE 	   "/nvram/webcfg_url" //check here.
+#define WEBCFG_URL_FILE 	   "/tmp/webcfg_url" //check here.
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
 /*----------------------------------------------------------------------------*/
@@ -385,7 +385,7 @@ int processMsgpackSubdoc(multipart_t *mp)
 	int i =0, m=0;
 	int rv = -1;
 	param_t *reqParam = NULL;
-	WDMP_STATUS ret = WDMP_FAILURE;
+	WDMP_STATUS ret = WDMP_SUCCESS;
 	int ccspStatus=0;
 	int paramCount = 0;
 	webcfgparam_t *pm;
@@ -571,10 +571,13 @@ int processMsgpackSubdoc(multipart_t *mp)
 
 	}
         char * blob_data = NULL;
+        size_t blob_len = -1 ;
 	WebConfigLog("Proceed to generateBlob\n");
 	generateBlob();
-	blob_data = get_DB_BLOB_base64();
+	blob_data = get_DB_BLOB_base64(&blob_len);
 	WebConfigLog("The b64 encoded blob is : %s\n",blob_data);
+        WebConfigLog("The b64 encoded blob_length is : %zu\n",blob_len);
+        readBlobFromFile(WEBCFG_BLOB_PATH);
 	return rv;
 }
 

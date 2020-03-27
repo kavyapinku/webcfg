@@ -23,7 +23,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
-#define WEBCFG_DB_FILE 	    "/nvram/webconfig_db.bin" //TODO:command line argument to pass /nvram/webconfig_db.bin
+#define WEBCFG_DB_FILE 	    "/tmp/webconfig_db.bin" //TODO:command line argument to pass /nvram/webconfig_db.bin
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
 /*----------------------------------------------------------------------------*/
@@ -59,6 +59,7 @@ typedef struct blob{
 	char *data;
 	size_t len;
 } blob_t; // will be formed from the struct webconfig_tmp_t and returned in Device.X_RDK_WebConfig.Data as base64 encode
+
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
@@ -100,6 +101,7 @@ int get_numOfMpDocs();
 
 void b64_encoder(const void *buf,size_t len, char ** decodeMsg);
 
+int writeBlobToFile(char *blob_file_path, char *data);
 /**
  *  This function converts a msgpack buffer into an webconfig_db_t structure
  *  if possible.
