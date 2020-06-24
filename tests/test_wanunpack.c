@@ -160,6 +160,11 @@ void wanUnpack(char *blob)
 				printf("wd->param->internal_ip %s\n",wd->param->internal_ip);
 			}
 			wandoc_destroy(wd);
+
+			if(decodeMsg != NULL)
+			{
+				free(decodeMsg);
+			}
 		}
 	}
 }

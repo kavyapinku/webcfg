@@ -164,6 +164,11 @@ void macbindingUnpack(char *blob)
 				}
 			}
 			macbindingdoc_destroy(md);
+
+			if(decodeMsg != NULL)
+			{
+				free(decodeMsg);
+			}
 		}
 	}
 }

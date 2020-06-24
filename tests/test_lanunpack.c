@@ -164,6 +164,11 @@ void lanUnpack(char *blob)
 				printf("ld->param->leasetime %lu\n",(long)ld->param->leasetime);
 			}
 			landoc_destroy(ld);
+
+			if(decodeMsg != NULL)
+			{
+				free(decodeMsg);
+			}
 		}
 	}
 }

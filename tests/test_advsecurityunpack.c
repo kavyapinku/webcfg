@@ -163,6 +163,11 @@ void advsecurityUnpack(char *blob)
 				printf("ad->param->privacy_protection_activate %s\n", (1 == ad->param->privacy_protection_activate)?"true":"false");
 			}
 			advsecuritydoc_destroy(ad);
+
+			if(decodeMsg != NULL)
+			{
+				free(decodeMsg);
+			}
 		}
 	}
 }

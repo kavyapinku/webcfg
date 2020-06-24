@@ -159,6 +159,11 @@ void mocaUnpack(char *blob)
 				printf("md->enable %s\n", (1 == md->param->enable)?"true":"false");
 			}
 			mocadoc_destroy(md);
+
+			if(decodeMsg != NULL)
+			{
+				free(decodeMsg);
+			}
 		}
 	}
 }
