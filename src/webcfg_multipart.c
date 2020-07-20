@@ -25,6 +25,7 @@
 #include "webcfg_notify.h"
 #include "webcfg_blob.h"
 #include "webcfg_event.h"
+#include "webcfg_metadata.h"
 #include <pthread.h>
 #include <uuid/uuid.h>
 /*----------------------------------------------------------------------------*/
@@ -54,6 +55,8 @@ char webpa_aut_token[4096]={'\0'};
 static char g_interface[32]={'\0'};
 static char g_systemReadyTime[64]={'\0'};
 static char g_FirmwareVersion[64]={'\0'};
+static char g_supportedDocs[180] ={'\0'};
+static char g_supportedVersion[64] ={'\0'};
 static char g_bootTime[64]={'\0'};
 static char g_productClass[64]={'\0'};
 static char g_ModelName[64]={'\0'};
@@ -998,6 +1001,8 @@ void createCurlHeader( struct curl_slist *list, struct curl_slist **header_list,
 	char *schema_header=NULL;
 	char *bootTime = NULL, *bootTime_header = NULL;
 	char *FwVersion = NULL, *FwVersion_header=NULL;
+	char *supportedDocs = NULL, *supportedDocs_header=NULL;
+	char *supportedVersion = NULL, *supportedVersion_header=NULL;
         char *productClass = NULL, *productClass_header = NULL;
 	char *ModelName = NULL, *ModelName_header = NULL;
 	char *systemReadyTime = NULL, *systemReadyTime_header=NULL;
@@ -1041,6 +1046,60 @@ void createCurlHeader( struct curl_slist *list, struct curl_slist **header_list,
 		WebcfgInfo("schema_header formed %s\n", schema_header);
 		list = curl_slist_append(list, schema_header);
 		WEBCFG_FREE(schema_header);
+	}
+
+        if(strlen(g_supportedVersion) ==0)
+	{
+		supportedVersion = getsupportedVersion();
+		if(supportedVersion !=NULL)
+		{
+		       strncpy(g_supportedVersion, supportedVersion, sizeof(g_supportedVersion)-1);
+		       WebcfgDebug("g_supportedVersion fetched is %s\n", g_supportedVersion);
+		       WEBCFG_FREE(supportedVersion);
+		}
+	}
+
+	if(strlen(g_supportedVersion))
+	{
+		supportedVersion_header = (char *) malloc(sizeof(char)*MAX_BUF_SIZE);
+		if(supportedVersion_header !=NULL)
+		{
+			snprintf(supportedVersion_header, MAX_BUF_SIZE, "X-System-Schema-Version: %s", g_supportedVersion);
+			WebcfgInfo("supportedVersion_header formed %s\n", supportedVersion_header);
+			list = curl_slist_append(list, supportedVersion_header);
+			WEBCFG_FREE(supportedVersion_header);
+		}
+	}
+	else
+	{
+		WebcfgError("Failed to get supportedVersion\n");
+	}
+
+	if(strlen(g_supportedDocs) ==0)
+	{
+		supportedDocs = getsupportedDocs();
+		if(supportedDocs !=NULL)
+		{
+		       strncpy(g_supportedDocs, supportedDocs, sizeof(g_supportedDocs)-1);
+		       WebcfgDebug("g_supportedDocs fetched is %s\n", g_supportedDocs);
+		       WEBCFG_FREE(supportedDocs);
+		}
+	}
+
+	if(strlen(g_supportedDocs))
+	{
+		supportedDocs_header = (char *) malloc(sizeof(char)*MAX_BUF_SIZE);
+		if(supportedDocs_header !=NULL)
+		{
+			snprintf(supportedDocs_header, MAX_BUF_SIZE, "X-System-Supported-Docs: %s", g_supportedDocs);
+			WebcfgInfo("supportedDocs_header formed %s\n", supportedDocs_header);
+			list = curl_slist_append(list, supportedDocs_header);
+			WEBCFG_FREE(supportedDocs_header);
+		}
+	}
+	else
+	{
+		WebcfgError("Failed to get supportedDocs\n");
 	}
 
 	if(strlen(g_bootTime) ==0)

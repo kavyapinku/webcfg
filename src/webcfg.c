@@ -30,10 +30,10 @@
 #include <wdmp-c.h>
 #include <base64.h>
 #include "webcfg_db.h"
+#include "webcfg_metadata.h"
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
-
 
 #ifdef MULTIPART_UTILITY
 
@@ -91,7 +91,10 @@ void *WebConfigMultipartTask(void *status)
 	Status = (unsigned long)status;
 
 	//start webconfig notification thread.
+	initWebcfgProperties(WEBCFG_PROPERTIES_FILE);
+
 	initWebConfigNotifyTask();
+
 	WebcfgInfo("initDB %s\n", WEBCFG_DB_FILE);
 
 	initDB(WEBCFG_DB_FILE);
