@@ -36,9 +36,11 @@
 /*----------------------------------------------------------------------------*/
 
 #ifdef MULTIPART_UTILITY
-
+#ifdef BUILD_YOCTO
 #define TEST_FILE_LOCATION		"/nvram/multipart.bin"
-
+#else
+#define TEST_FILE_LOCATION		"/tmp/multipart.bin"
+#endif
 #endif
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */

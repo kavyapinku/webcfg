@@ -48,6 +48,10 @@ include_directories(${INCLUDE_DIR}
 
 if (NOT BUILD_YOCTO)
 
+if (MULTIPART_UTILITY)
+add_definitions(-DMULTIPART_UTILITY)
+endif (MULTIPART_UTILITY)
+
 # msgpack-c external dependency
 #-------------------------------------------------------------------------------
 ExternalProject_Add(msgpack
