@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include "webcfg.h"
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
@@ -27,6 +28,8 @@
 #define WEBCFG_PROPERTIES_FILE 	    "/tmp/webconfig.properties"
 #endif
 
+#define MAX_GROUP_SIZE 10
+#define MAX_SUBDOCS_SIZE 24
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
 /*----------------------------------------------------------------------------*/
@@ -35,7 +38,7 @@
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
-
+WEBCFG_STATUS isSubDocSupported(char *subDoc);
 void initWebcfgProperties(char * filename);
 char * getsupportedDocs();
 char * getsupportedVersion();
