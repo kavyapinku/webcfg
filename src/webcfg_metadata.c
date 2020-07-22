@@ -189,6 +189,10 @@ WEBCFG_STATUS isSubDocSupported(char *subDoc)
 			return WEBCFG_SUCCESS;
 		}
 	}
+	else
+	{
+		WebcfgError("Supported doc bit not found for %s\n",subDoc);
+	}
 	WEBCFG_FREE(groupId);
 	if(subDocBit != NULL)
 	{
@@ -247,5 +251,9 @@ void getSubdDocBitForGroupId(char *groupId, char **subDocBit)
 				break;
 			}
 		}
+	}
+	else
+	{
+		WebcfgError("Failed to read supported bits from webconfig.properties\n");
 	}
 }
