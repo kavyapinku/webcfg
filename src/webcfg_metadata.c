@@ -53,6 +53,8 @@ void initWebcfgProperties(char * filename)
      char *data = NULL;
      size_t len = 0;
      int ch_count=0;
+     char * supported_bits_temp = NULL;
+     char * supported_version_temp = NULL;
 
      WebcfgDebug("webcfg properties file path is %s\n", filename);
      fp = fopen(filename,"rb");
@@ -116,30 +118,38 @@ void initWebcfgProperties(char * filename)
         if(strcmp(token,"WEBCONFIG_SUPPORTED_DOCS_BIT") == 0)
         {
           token = strtok(NULL, "=");
-          supported_bits = strdup(token);
-          printf("supported_bits = %s\n", supported_bits);
-          
+          supported_bits_temp = strdup(token);
+          WebcfgDebug("supported_bits = %s\n", supported_bits_temp);
+          token = strtok(NULL, "=");
         }
 
-	supported_version = strdup(token);
-        printf("supported_version = %s\n", supported_version);
+        if(token!=NULL)
+        {
+	   supported_version_temp = strdup(token);
+           WebcfgDebug("supported_version = %s\n", supported_version_temp);
         
+        }
         
         if(token!=NULL)
         {
            token = strtok(NULL, "="); 
         }
      } 
-     supported_bits = strtok(supported_bits,"\n");
-     supported_version = strtok(supported_version,"\n");
-     printf("supported_bits = %s\n", supported_bits);
+     supported_bits_temp = strtok(supported_bits_temp,"\n");
+	 supported_bits = strdup(supported_bits_temp);
+	 
+     supported_version = strtok(supported_version_temp,"\n");
+     WebcfgDebug("supported_bits = %s\n", supported_bits);
 
+     WEBCFG_FREE(supported_bits_temp);
+     WEBCFG_FREE(supported_version_temp);
      WEBCFG_FREE(data);     
 }
 
 char * getsupportedDocs()
 {
-    char * token = strtok(supported_bits,"|");
+    char * token_temp = strdup(supported_bits);
+    char * token = strtok(token_temp,"|");
     long long number = 0;
     char * endptr = NULL;
     char * finalvalue = NULL , *tempvalue = NULL;
@@ -159,6 +169,7 @@ char * getsupportedDocs()
         }
     }
     WEBCFG_FREE(tempvalue);
+    WEBCFG_FREE(token_temp);
     return finalvalue;
 }
 
@@ -232,21 +243,20 @@ int getSubdocGroupId(char *subDoc, char **groupId)
 void getSubdDocBitForGroupId(char *groupId, char **subDocBit)
 {
 	char *tmpStr=  NULL, *numStr = NULL;
-	char bitmap[32] = {'\0'};
-	char group[8] = {'\0'};
 	char subDoc[24] = {'\0'};
+	WebcfgDebug("supported_bits: %s\n",supported_bits);
 	if(supported_bits != NULL)
 	{
 		tmpStr = strdup(supported_bits);
 		while(tmpStr != NULL)
 		{
 			numStr = strsep(&tmpStr, "|");
-			webcfgStrncpy(bitmap, numStr, sizeof(bitmap)+1);
-			webcfgStrncpy(group, numStr, sizeof(group)+1);
-			webcfgStrncpy(subDoc, numStr+sizeof(group),sizeof(subDoc)+1);
-			if(strcmp(group,groupId) == 0)
+			WebcfgDebug("numStr: %s\n",numStr);
+			WebcfgDebug("groupId: %s\n",groupId);
+			if(strncmp(groupId, numStr, 8) == 0)
 			{
-				WebcfgDebug("bitmap: %s group: %s subDoc: %s\n",bitmap, group,subDoc);
+				webcfgStrncpy(subDoc, numStr+8,sizeof(subDoc)+1);
+				WebcfgDebug("subDoc: %s\n",subDoc);
 				*subDocBit= strdup(subDoc);
 				break;
 			}

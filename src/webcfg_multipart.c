@@ -619,14 +619,6 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 							WebcfgDebug("The result is %s\n",result);
 							updateTmpList(subdoc_node, mp->entries[m].name_space, mp->entries[m].etag, "failed", result, ccspStatus, 0, 1);
 							addWebConfgNotifyMsg(mp->entries[m].name_space, mp->entries[m].etag, "failed", result, trans_id,0,"status",ccspStatus);
-							if(ccspStatus == 204 && subdocStatus != WEBCFG_SUCCESS)
-							{
-								set_doc_fail(0);
-							}
-							else
-							{
-								set_doc_fail(1);
-							}
 							WebcfgDebug("the retry flag value is %d\n", get_doc_fail());
 						}
 						else
@@ -1556,7 +1548,7 @@ void failedDocsRetry()
 
 	while (NULL != temp)
 	{
-		if((temp->error_code == CCSP_CRASH_STATUS_CODE) || (temp->error_code == 204) || (temp->error_code == 191))
+		if((temp->error_code == CCSP_CRASH_STATUS_CODE) || (temp->error_code == 204 && (temp->error_details != NULL && strstr(temp->error_details, "doc_unsupported") == NULL)) || (temp->error_code == 191))
 		{
 			if(retryMultipartSubdoc(temp, temp->name) == WEBCFG_SUCCESS)
 			{
