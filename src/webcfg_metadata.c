@@ -23,7 +23,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
-/* none */
+#define MAXCHAR 1000
 
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
@@ -49,102 +49,67 @@ void getSubdDocBitForGroupId(char *groupId, char **subDocBit);
 void initWebcfgProperties(char * filename)
 {
      FILE *fp = NULL;
-     size_t sz = 0;
-     char *data = NULL;
-     size_t len = 0;
-     int ch_count=0;
-     char * supported_bits_temp = NULL;
-     char * supported_version_temp = NULL;
+     char str[MAXCHAR];
+     char * temp_bit_token = NULL, * temp_version_token = NULL;
+     char * supported_bits_temp = NULL, * supported_version_temp = NULL;
 
      WebcfgDebug("webcfg properties file path is %s\n", filename);
-     fp = fopen(filename,"rb");
+     fp = fopen(filename,"r");
 
      if (fp == NULL)
      {
 	WebcfgError("Failed to open file %s\n", filename);
      }
      
-     fseek(fp, 0, SEEK_END);
-     ch_count = ftell(fp);
-     if (ch_count == (int)-1)
+     while (fgets(str, MAXCHAR, fp) != NULL)
      {
-         WebcfgError("fread failed.\n");
-	 fclose(fp);
+        if((strstr(str,"WEBCONFIG_SUPPORTED_DOCS_BIT")!=NULL))
+	{
+		WebcfgDebug("The value stored in temp_bit_token is %s\n", str);
+                temp_bit_token = strdup(str);
+	}
+        
+        if((strstr(str,"WEBCONFIG_DOC_SCHEMA_VERSION")!=NULL))
+	{
+		WebcfgDebug("The value stored in temp_version_token is %s\n", str);
+                temp_version_token = strdup(str);
+	}
+        
      }
-     fseek(fp, 0, SEEK_SET);
-     data = (char *) malloc(sizeof(char) * (ch_count + 1));
-     if(NULL == data)
-     {
-         WebcfgError("Memory allocation for data failed.\n");
-         fclose(fp);
-     }
-     memset(data,0,(ch_count + 1));
-     sz = fread(data, 1, ch_count,fp);
-     if (sz == (size_t)-1) 
-     {	
-	fclose(fp);
-	WebcfgError("fread failed.\n");
-	WEBCFG_FREE(data);
-     }
-     len = ch_count;
      fclose(fp);
 
-     char * ptr_count = data;
-     int flag = 1;
-
-     while(flag == 1)
+     if(temp_bit_token != NULL)
      {
-        ptr_count = memchr(ptr_count, '#', len - (ptr_count - data));
-        if(ptr_count == NULL)
-        {
-            break;
-        }
-        if(0 == memcmp(ptr_count, "#", 1))
-        {
-              ptr_count = memchr(ptr_count, '\n', len - (ptr_count - data));
-        }
-        ptr_count++;
-        if(0 != memcmp(ptr_count, "#", 1))
-        {
-              flag = 0;
-              ptr_count++;
-        }
+         supported_bits_temp = strtok(temp_bit_token,"=");
+         supported_bits_temp = strtok(NULL,"=");
+         supported_bits_temp = strtok(supported_bits_temp,"\n");
+         setsupportedDocs(supported_bits_temp);
+         WebcfgDebug("Supported bits final %s value\n",supported_bits);
      }
-     char* token = strtok(ptr_count, "=");
-     while (token != NULL)
+
+     if(temp_version_token != NULL)
      { 
-	printf("Initial %s\n", token);
-      
-        if(strcmp(token,"WEBCONFIG_SUPPORTED_DOCS_BIT") == 0)
-        {
-          token = strtok(NULL, "=");
-          supported_bits_temp = strdup(token);
-          WebcfgDebug("supported_bits = %s\n", supported_bits_temp);
-          token = strtok(NULL, "=");
-        }
-
-        if(token!=NULL)
-        {
-	   supported_version_temp = strdup(token);
-           WebcfgDebug("supported_version = %s\n", supported_version_temp);
-        
-        }
-        
-        if(token!=NULL)
-        {
-           token = strtok(NULL, "="); 
-        }
-     } 
-     supported_bits_temp = strtok(supported_bits_temp,"\n");
-	 supported_bits = strdup(supported_bits_temp);
-	 
-     supported_version = strtok(supported_version_temp,"\n");
-     WebcfgDebug("supported_bits = %s\n", supported_bits);
-
-     WEBCFG_FREE(supported_bits_temp);
-     WEBCFG_FREE(supported_version_temp);
-     WEBCFG_FREE(data);     
+         supported_version_temp = strtok(temp_version_token,"=");
+         supported_version_temp = strtok(NULL,"=");
+         supported_version_temp = strtok(supported_version_temp,"\n");
+         setsupportedVersion(supported_version_temp);
+         WebcfgDebug("supported_version = %s value\n", supported_version);
+     }
+     WEBCFG_FREE(temp_bit_token);
+     WEBCFG_FREE(temp_version_token);
+     
 }
+
+void setsupportedDocs( char * value)
+{
+     supported_bits = strdup(value);
+}
+
+void setsupportedVersion( char * value)
+{
+     supported_version = strdup(value);
+}
+
 
 char * getsupportedDocs()
 {

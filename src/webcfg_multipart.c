@@ -619,6 +619,7 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 							WebcfgDebug("The result is %s\n",result);
 							updateTmpList(subdoc_node, mp->entries[m].name_space, mp->entries[m].etag, "failed", result, ccspStatus, 0, 1);
 							addWebConfgNotifyMsg(mp->entries[m].name_space, mp->entries[m].etag, "failed", result, trans_id,0,"status",ccspStatus);
+							set_doc_fail(1);
 							WebcfgDebug("the retry flag value is %d\n", get_doc_fail());
 						}
 						else
@@ -1035,25 +1036,6 @@ void createCurlHeader( struct curl_slist *list, struct curl_slist **header_list,
 		list = curl_slist_append(list, auth_header);
 		WEBCFG_FREE(auth_header);
 	}
-	version_header = (char *) malloc(sizeof(char)*MAX_BUF_SIZE);
-	if(version_header !=NULL)
-	{
-		getConfigVersionList(version);
-		snprintf(version_header, MAX_BUF_SIZE, "IF-NONE-MATCH:%s", ((strlen(version)!=0) ? version : "NONE"));
-		WebcfgInfo("version_header formed %s\n", version_header);
-		list = curl_slist_append(list, version_header);
-		WEBCFG_FREE(version_header);
-	}
-	list = curl_slist_append(list, "Accept: application/msgpack");
-
-	schema_header = (char *) malloc(sizeof(char)*MAX_BUF_SIZE);
-	if(schema_header !=NULL)
-	{
-		snprintf(schema_header, MAX_BUF_SIZE, "Schema-Version: %s", "v1.0");
-		WebcfgInfo("schema_header formed %s\n", schema_header);
-		list = curl_slist_append(list, schema_header);
-		WEBCFG_FREE(schema_header);
-	}
 
         if(strlen(g_supportedVersion) ==0)
 	{
@@ -1079,7 +1061,25 @@ void createCurlHeader( struct curl_slist *list, struct curl_slist **header_list,
 	}
 	else
 	{
-		WebcfgError("Failed to get supportedVersion\n");
+		version_header = (char *) malloc(sizeof(char)*MAX_BUF_SIZE);
+		if(version_header !=NULL)
+		{
+			getConfigVersionList(version);
+			snprintf(version_header, MAX_BUF_SIZE, "IF-NONE-MATCH:%s", ((strlen(version)!=0) ? version : "NONE"));
+			WebcfgInfo("version_header formed %s\n", version_header);
+			list = curl_slist_append(list, version_header);
+			WEBCFG_FREE(version_header);
+		}
+		list = curl_slist_append(list, "Accept: application/msgpack");
+
+		schema_header = (char *) malloc(sizeof(char)*MAX_BUF_SIZE);
+		if(schema_header !=NULL)
+		{
+			snprintf(schema_header, MAX_BUF_SIZE, "Schema-Version: %s", "v1.0");
+			WebcfgInfo("schema_header formed %s\n", schema_header);
+			list = curl_slist_append(list, schema_header);
+			WEBCFG_FREE(schema_header);
+		}
 	}
 
 	if(strlen(g_supportedDocs) ==0)
