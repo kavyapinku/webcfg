@@ -161,6 +161,7 @@ void advsecurityUnpack(char *blob)
 				printf("ad->param->safebrowsing_enable %s\n", (1 == ad->param->safebrowsing_enable)?"true":"false");
 				printf("ad->param->parental_control_activate %s\n", (1 == ad->param->parental_control_activate)?"true":"false");
 				printf("ad->param->privacy_protection_activate %s\n", (1 == ad->param->privacy_protection_activate)?"true":"false");
+				printf("ad->param->apc_app_blocker_activate %s\n", (1 == ad->param->apc_app_blocker_activate)?"true":"false");
 			}
 			advsecuritydoc_destroy(ad);
 

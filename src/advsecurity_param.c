@@ -115,7 +115,7 @@ const char* advsecuritydoc_strerror( int errnum )
 int process_advsecurityparams( advsecurityparam_t *e, msgpack_object_map *map )
 {
     int left = map->size;
-    uint8_t objects_left = 0x05;
+    uint8_t objects_left = 0x06;
     msgpack_object_kv *p;
     p = map->ptr;
     while( (0 < objects_left) && (0 < left--) )
@@ -142,11 +142,16 @@ int process_advsecurityparams( advsecurityparam_t *e, msgpack_object_map *map )
                  if( 0 == match(p, "ParentalControlActivate") )
                  {
                      e->parental_control_activate = p->val.via.boolean;
-                     objects_left &= ~(1 << 1);
+                     objects_left &= ~(1 << 5);
                  }
                  if( 0 == match(p, "PrivacyProtectionActivate") )
                  {
                      e->privacy_protection_activate = p->val.via.boolean;
+                     objects_left &= ~(1 << 1);
+                 }
+                 if( 0 == match(p, "ApcAppBlockerActivate") )
+                 {
+                     e->apc_app_blocker_activate = p->val.via.boolean;
                      objects_left &= ~(1 << 2);
                  }
               }

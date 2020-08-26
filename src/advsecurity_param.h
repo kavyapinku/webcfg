@@ -25,6 +25,7 @@ typedef struct
     bool  safebrowsing_enable;
     bool  parental_control_activate;
     bool  privacy_protection_activate;
+    bool apc_app_blocker_activate;
 
 } advsecurityparam_t;
 
