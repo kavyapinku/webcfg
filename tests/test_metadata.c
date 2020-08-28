@@ -61,10 +61,10 @@ int writeToFile(char *file_path, char *data, size_t size)
 void test_initWebcfgProperties()
 {
 	char buf[512] = {'\0'};
-	snprintf(buf,sizeof(buf),"WEBCONFIG_SUPPORTED_DOCS_BIT=00000000000000000000000000000000|00000000000000000000000000000000");
+	snprintf(buf,sizeof(buf),"WEBCONFIG_SUPPORTED_DOCS_BIT=16777231,33554435,50331649,67108865,83886081,100663297,117440513,134217729");
 	writeToFile(WEBCFG_PROPERTIES_FILE, buf, strlen(buf));
 	initWebcfgProperties(WEBCFG_PROPERTIES_FILE);
-	snprintf(buf,sizeof(buf),"WEBCONFIG_DOC_SCHEMA_VERSION=1234-v0,2345-v0");
+	snprintf(buf,sizeof(buf),"WEBCONFIG_DOC_SCHEMA_VERSION=16777227-1.1,16777229-1.2");
 	writeToFile(WEBCFG_PROPERTIES_FILE, buf, strlen(buf));
 	initWebcfgProperties(WEBCFG_PROPERTIES_FILE);
 }
@@ -80,15 +80,11 @@ void err_initWebcfgProperties()
 void test_supportedDocs()
 {
 	char *docs = NULL;
-	setsupportedDocs("00000001000000000000000000000001");
+	setsupportedDocs("16777231");
 	docs = getsupportedDocs();
 	printf("docs: %s\n",docs);
 	free(docs);
-	setsupportedDocs("00000000000000000000000000000000");
-	docs = getsupportedDocs();
-	printf("docs: %s\n",docs);
-	free(docs);
-	setsupportedDocs("00000000000000000000000000000000|10010001000000000000000000000011");
+	setsupportedDocs("16777231,33554435,50331649");
 	docs = getsupportedDocs();
 	printf("docs: %s\n",docs);
 	free(docs);
@@ -104,11 +100,19 @@ void test_supportedDocs()
 void test_supportedVersions()
 {
 	char *versions = NULL;
-	setsupportedVersion("1234-v0");
+	setsupportedVersion("50331649-1.1");
 	versions = getsupportedVersion();
 	printf("versions: %s\n",versions);
 	free(versions);
-	setsupportedVersion("2345-v0,432-v1");
+	setsupportedVersion("50331649-1.2,16777231-1.4");
+	versions = getsupportedVersion();
+	printf("versions: %s\n",versions);
+	free(versions);
+	setsupportedVersion("");
+	versions = getsupportedVersion();
+	printf("versions: %s\n",versions);
+	free(versions);
+	setsupportedVersion(NULL);
 	versions = getsupportedVersion();
 	printf("versions: %s\n",versions);
 	free(versions);
@@ -116,19 +120,15 @@ void test_supportedVersions()
 
 void test_isSubDocSupported()
 {
-	setsupportedDocs("00000010000000000000000000000011|00001010000000000000000000000010");
-	isSubDocSupported("homessid");
-	isSubDocSupported("aker");
-	isSubDocSupported("privatessid");
-	isSubDocSupported("radioreport");
-	isSubDocSupported("interfacereport");
-	setsupportedDocs("10000010000000000000000000000011|00001010100000000000000000000010|00000000000000000000000000000000");
-	isSubDocSupported("lan");
-	isSubDocSupported("wifi");
-	setsupportedDocs("");
+	char buf[512] = {'\0'};
+	snprintf(buf,sizeof(buf),"WEBCONFIG_SUBDOC_MAP_1=portforwarding:1:true,wan:2:true,lan:3:true,macbinding:4:true,hotspot:5:false,bridge:6:false");
+	writeToFile(WEBCFG_PROPERTIES_FILE, buf, strlen(buf));
+	initWebcfgProperties(WEBCFG_PROPERTIES_FILE);
+	isSubDocSupported("portforwarding");
 	isSubDocSupported("wan");
-	setsupportedDocs(NULL);
-	isSubDocSupported("mesh");
+	isSubDocSupported("lan");
+	isSubDocSupported("bridge");
+	isSubDocSupported("interfacereport");
 }
 
 void add_suites( CU_pSuite *suite )
