@@ -605,32 +605,6 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 							checkDBList(mp->entries[m].name_space,mp->entries[m].etag, NULL);
 							success_count++;
 						}
-
-						WebcfgDebug("The mp->entries_count %d\n",(int)mp->entries_count);
-						WebcfgDebug("The count %d\n",success_count);
-						if(success_count ==(int) mp->entries_count-1)
-						{
-							char * temp = strdup(g_ETAG);
-							uint32_t version=0;
-							if(temp)
-							{
-								version = strtoul(temp,NULL,0);
-								WEBCFG_FREE(temp);
-							}
-							if(version != 0)
-							{
-								checkDBList("root",version, NULL);
-								success_count++;
-							}
-
-							WebcfgInfo("The Etag is %lu\n",(long)version );
-							//Delete tmp queue root as all docs are applied
-							WebcfgInfo("Delete tmp queue root as all docs are applied\n");
-							WebcfgDebug("root version to delete is %lu\n", (long)version);
-							deleteFromTmpList("root");
-							WebcfgDebug("processMsgpackSubdoc is success as all the docs are applied\n");
-							rv = WEBCFG_SUCCESS;
-						}
 					}
 					else
 					{
@@ -649,6 +623,7 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 							if(ccspStatus == 204 && subdocStatus != WEBCFG_SUCCESS)
 							{
 								snprintf(result,MAX_VALUE_LEN,"doc_unsupported:%s", errDetails);
+								success_count++;
 							}
 							else
 							{
@@ -668,6 +643,31 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 							addWebConfgNotifyMsg(mp->entries[m].name_space, mp->entries[m].etag, "failed", result, trans_id,0, "status", ccspStatus, NULL, 200);
 						}
 						//print_tmp_doc_list(mp->entries_count);
+					}
+					WebcfgDebug("The mp->entries_count %d\n",(int)mp->entries_count);
+					WebcfgDebug("The count %d\n",success_count);
+					if(success_count ==(int) mp->entries_count-1)
+					{
+						char * temp = strdup(g_ETAG);
+						uint32_t version=0;
+						if(temp)
+						{
+							version = strtoul(temp,NULL,0);
+							WEBCFG_FREE(temp);
+						}
+						if(version != 0)
+						{
+							checkDBList("root",version, NULL);
+							success_count++;
+						}
+
+						WebcfgInfo("The Etag is %lu\n",(long)version );
+						//Delete tmp queue root as all docs are applied
+						WebcfgInfo("Delete tmp queue root as all docs are applied\n");
+						WebcfgDebug("root version to delete is %lu\n", (long)version);
+						deleteFromTmpList("root");
+						WebcfgDebug("processMsgpackSubdoc is success as all the docs are applied\n");
+						rv = WEBCFG_SUCCESS;
 					}
 				}
 				else
