@@ -34,16 +34,7 @@ enum {
     OUT_OF_MEMORY            = HELPERS_OUT_OF_MEMORY,
     INVALID_FIRST_ELEMENT    = HELPERS_INVALID_FIRST_ELEMENT,
     MISSING_ENTRY         = HELPERS_MISSING_WRAPPER,
-    INVALID_PORT_RANGE,
-    INVALID_PORT_NUMBER,
-    INVALID_INTERNAL_IPV4,
-    BOTH_IPV4_AND_IPV6_TARGETS_EXIST,
-    INVALID_IPV6,
-    MISSING_INTERNAL_PORT,
-    INVALID_DATATYPE,
-    MISSING_TARGET_IP,
-    MISSING_PORT_RANGE,
-    MISSING_PROTOCOL,
+    PARTIAL_APPLY              = HELPERS_PARTIAL_APPLY,
     INVALID_OBJECT,
     INVALID_VERSION,
 };
@@ -114,6 +105,7 @@ const char* macbindingdoc_strerror( int errnum )
         { .v = INVALID_FIRST_ELEMENT,            .txt = "Invalid first element." },
         { .v = INVALID_VERSION,                 .txt = "Invalid 'version' value." },
         { .v = INVALID_OBJECT,                .txt = "Invalid 'value' array." },
+	{ .v = PARTIAL_APPLY,                      .txt = "Contains additional param in array" },
         { .v = 0, .txt = NULL }
     };
     int i = 0;
@@ -142,6 +134,7 @@ const char* macbindingdoc_strerror( int errnum )
 int process_macdocparams( macdoc_t *e, msgpack_object_map *map )
 {
     int left = map->size;
+    printf("The map->size is %d\n", map->size);
     uint8_t objects_left = 0x02;
     msgpack_object_kv *p;
 

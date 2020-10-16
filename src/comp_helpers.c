@@ -105,6 +105,12 @@ void* comp_helper_convert( const void *buf, size_t len,
                          errno = HELPERS_OK;
                          return p;
                     }
+                    else if( NULL != p && errno == HELPERS_PARTIAL_APPLY)
+                    {
+                         printf("Inside extra param condition\n");
+                         msgpack_unpacked_destroy( &msg );
+                         return p;
+                    }
                     else 
                     {     
                          WebcfgDebug("Invalid first element\n");

@@ -99,7 +99,7 @@ void test_wan_unpack()
 void wanUnpack(char *blob)
 {
 	wandoc_t *wd = NULL;
-	int err;
+	int err = 0;
 
 	if(blob != NULL)
 	{
@@ -149,7 +149,10 @@ void wanUnpack(char *blob)
 		{
 			wd = wandoc_convert(decodeMsg, size);//used to process the incoming msgobject
 			err = errno;
-			printf( "errno: %s\n", wandoc_strerror(err) );
+			if(err == HELPERS_PARTIAL_APPLY)
+			{
+				printf( "errno: %s\n", wandoc_strerror(err) );
+			}
 		
 			if(wd != NULL)
 			{

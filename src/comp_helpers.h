@@ -31,7 +31,8 @@ enum {
     HELPERS_OK = 0,
     HELPERS_OUT_OF_MEMORY,
     HELPERS_INVALID_FIRST_ELEMENT,
-    HELPERS_MISSING_WRAPPER
+    HELPERS_MISSING_WRAPPER,
+    HELPERS_PARTIAL_APPLY
 };
 typedef int (*process_fn_t)(void *, int, ...);
 typedef void (*destroy_fn_t)(void *);

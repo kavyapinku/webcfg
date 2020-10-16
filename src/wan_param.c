@@ -31,19 +31,11 @@ enum {
     OK                       = HELPERS_OK,
     OUT_OF_MEMORY            = HELPERS_OUT_OF_MEMORY,
     INVALID_FIRST_ELEMENT    = HELPERS_INVALID_FIRST_ELEMENT,
-    MISSING_ENTRY         = HELPERS_MISSING_WRAPPER,
-    INVALID_PORT_RANGE,
-    INVALID_PORT_NUMBER,
-    INVALID_INTERNAL_IPV4,
-    BOTH_IPV4_AND_IPV6_TARGETS_EXIST,
-    INVALID_IPV6,
-    MISSING_INTERNAL_PORT,
-    INVALID_DATATYPE,
-    MISSING_TARGET_IP,
-    MISSING_PORT_RANGE,
-    MISSING_PROTOCOL,
+    MISSING_ENTRY            = HELPERS_MISSING_WRAPPER,
+    PARTIAL_APPLY            = HELPERS_PARTIAL_APPLY,
     INVALID_OBJECT,
     INVALID_VERSION,
+
 };
 /*----------------------------------------------------------------------------*/
 /*                            File Scoped Variables                           */
@@ -97,8 +89,9 @@ const char* wandoc_strerror( int errnum )
         { .v = OK,                               .txt = "No errors." },
         { .v = OUT_OF_MEMORY,                    .txt = "Out of memory." },
         { .v = INVALID_FIRST_ELEMENT,            .txt = "Invalid first element." },
-        { .v = INVALID_VERSION,                 .txt = "Invalid 'version' value." },
-        { .v = INVALID_OBJECT,                .txt = "Invalid 'value' array." },
+        { .v = INVALID_VERSION,                  .txt = "Invalid 'version' value." },
+        { .v = INVALID_OBJECT,                   .txt = "Invalid 'value' array." },
+	{ .v = PARTIAL_APPLY,                      .txt = "Contains additional param in array" },
         { .v = 0, .txt = NULL }
     };
     int i = 0;
@@ -124,6 +117,7 @@ const char* wandoc_strerror( int errnum )
 int process_wanparams( wanparam_t *e, msgpack_object_map *map )
 {
     int left = map->size;
+   printf("The map->size is %d\n", map->size);
     uint8_t objects_left = 0x02;
     msgpack_object_kv *p;
     p = map->ptr;
@@ -149,15 +143,28 @@ int process_wanparams( wanparam_t *e, msgpack_object_map *map )
               }
         }
            p++;
+	
     }
         
-    
-    if( 1 & objects_left ) {
-    } else {
-        errno = OK;
+    printf("The left is %d\n",left);
+    if( 0 == objects_left )
+    {
+       if(0 < left)
+       {
+           errno = PARTIAL_APPLY;
+       }
+       else
+       {
+           errno = OK;
+       }
     }
-   
-    return (0 == objects_left) ? 0 : -1;
+    else
+    {
+        return -1;
+    }
+
+    return errno;   
+   // return (0 == objects_left) ? 0 : -1;
 }
 int process_wandoc( wandoc_t *wd,int num, ... )
 {
@@ -190,7 +197,15 @@ int process_wandoc( wandoc_t *wd,int num, ... )
 
 	if( 0 != process_wanparams(wd->param, mapobj) )
 	{
-		WebcfgDebug("process_wanparams failed\n");
+		
+		if(errno == PARTIAL_APPLY)
+		{
+			printf(" %s\n", wandoc_strerror(errno));
+		}
+		else
+		{
+			WebcfgDebug("process_wanparams failed\n");
+		}
 		return -1;
 	}
 
