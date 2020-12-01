@@ -63,9 +63,9 @@ pthread_cond_t sync_condition=PTHREAD_COND_INITIALIZER;
 bool g_shutdown  = false;
 bool g_secondary_docs = false;
 static long long g_rand_time = 0;
-static long long g_maintenance_time = 0;
-static long long g_fw_start_time = 0;
-static long long g_fw_end_time = 0;
+static long g_maintenance_time = 0;
+static long g_fw_start_time = 0;
+static long g_fw_end_time = 0;
 #ifdef MULTIPART_UTILITY
 static int g_testfile = 0;
 #endif
@@ -152,7 +152,7 @@ void *WebConfigMultipartTask(void *status)
 			else if(maintenance_doc_sync == 1 && checkMaintenanceTimer() == 1 && checkSyncClash() == 0)
 			{
 				WebcfgInfo("Triggered Supplementary doc boot sync\n");
-				maintenance_doc_sync = 1;
+				maintenance_doc_sync = 0;
 				processWebconfgSync((int)Status);
 				set_global_secondary_docs(false);
 			}
@@ -176,7 +176,7 @@ void *WebConfigMultipartTask(void *status)
 		{
 			value =  maintenanceSyncSeconds();
 			maintenance_doc_sync = 1;
-			WebcfgInfo("The secondarySyncSeconds value is %d\n",value);
+			WebcfgInfo("The maintenanceSyncSeconds value is %d\n",value);
 
 			ts.tv_sec += value;
 			WebcfgInfo("The current time wait in maintenanceSyncSeconds is %lld at %s\n",(long long)ts.tv_sec, printTime((long long)ts.tv_sec));
@@ -353,32 +353,32 @@ void set_global_rand_time(long long value)
     g_rand_time = value;
 }
 
-long long get_global_maintenance_time()
+long get_global_maintenance_time()
 {
     return g_maintenance_time;
 }
 
-void set_global_maintenance_time(long long value)
+void set_global_maintenance_time(long value)
 {
     g_maintenance_time = value;
 }
 
-long long get_global_fw_start_time()
+long get_global_fw_start_time()
 {
     return g_fw_start_time;
 }
 
-void set_global_fw_start_time(long long value)
+void set_global_fw_start_time(long value)
 {
     g_fw_start_time = value;
 }
 
-long long get_global_fw_end_time()
+long get_global_fw_end_time()
 {
     return g_fw_end_time;
 }
 
-void set_global_fw_end_time(long long value)
+void set_global_fw_end_time(long value)
 {
     g_fw_end_time = value;
 }
@@ -767,10 +767,15 @@ char* printTime(long long time)
 
 int checkSyncClash()
 {
-	long long boot_sync_time, maintenance_start_time, maintenance_end_time = 0;
-	boot_sync_time = get_global_rand_time();
+	long boot_sync_time, maintenance_start_time, maintenance_end_time = 0;
+	boot_sync_time = getTimeInSeconds(get_global_rand_time());
+
 	maintenance_start_time = get_global_fw_start_time();
 	maintenance_end_time = get_global_fw_end_time();
+
+	WebcfgInfo("The boot_sync_time is %ld\n", boot_sync_time);
+	WebcfgInfo("The maintenance_start_time is %ld\n", maintenance_start_time);
+	WebcfgInfo("The maintenance_end_time is %ld\n", maintenance_end_time);
 
 	if( boot_sync_time >= maintenance_start_time && boot_sync_time <= maintenance_end_time)
 	{
@@ -782,28 +787,9 @@ int checkSyncClash()
 
 void initMaintenanceTimer()
 {
-	struct timespec mt;
-	struct tm  mts;
-
-	int time_val = 0;
-	long long rand_time = 0;
-
-	int fw_start_time = 0;
-	int fw_end_time = 0;
-
-	clock_gettime(CLOCK_REALTIME, &mt);
-	time_t rawtime = mt.tv_sec;
-
-	mts = *localtime(&rawtime);
-
-	mts.tm_mday += 1;
-	mts.tm_hour = 00;
-	mts.tm_min = 00;
-	mts.tm_sec = 00;
-
-	time_t time_at_12 = mktime(&mts);
-
-	WebcfgInfo("The time at 12 is %lld\n",(long long)time_at_12);
+	long time_val = 0;
+	long fw_start_time = 0;
+	long fw_end_time = 0;
 
 	if( readFWFiles(FW_START_FILE, fw_start_time) != WEBCFG_SUCCESS )
 	{
@@ -821,28 +807,39 @@ void initMaintenanceTimer()
 		fw_end_time = MAX_MAINTENANCE_TIME;
 	}
 
-	set_global_fw_start_time(((long long)time_at_12 + fw_start_time));
-	set_global_fw_end_time(((long long)time_at_12 + fw_end_time));
+	if( fw_start_time > fw_end_time )
+	{
+		fw_start_time = fw_start_time - 86400;
+	}
+
+	set_global_fw_start_time( fw_start_time );
+	set_global_fw_end_time( fw_end_time );
 
         srand(time(0));
         time_val = (rand() % (fw_end_time - fw_start_time+ 1)) + fw_start_time;
-	WebcfgInfo("The value of maintenance_time_val is %d\n",time_val);
-	rand_time = (long long)time_at_12+time_val;
-	WebcfgInfo("The value of maintenance_rand_time is %lld\n",rand_time);
-	set_global_maintenance_time(rand_time);
+	WebcfgInfo("The value of maintenance_time_val is %ld\n",time_val);
+	WebcfgInfo("The fw_start_time is %ld\n",get_global_fw_start_time());
+	WebcfgInfo("The fw_end_time is %ld\n",get_global_fw_end_time());
+
+	set_global_maintenance_time(time_val);
 
 }
 
 int checkMaintenanceTimer()
 {
-	long long cur_time = 0;
 	struct timespec rt;
+
+	long long cur_time = 0;
+	long cur_time_in_sec = 0;
 
 	clock_gettime(CLOCK_REALTIME, &rt);
 	cur_time = rt.tv_sec;
-	WebcfgInfo("The current time in checkMaintenanceTimer is %lld\n",cur_time);
-	WebcfgInfo("The current time in checkMaintenanceTimer is %lld\n",get_global_maintenance_time());
-	if(cur_time >= get_global_maintenance_time())
+	cur_time_in_sec = getTimeInSeconds(cur_time);
+
+	WebcfgInfo("The current time in checkMaintenanceTimer is %lld at %s\n",cur_time, printTime(cur_time));
+	WebcfgInfo("The random timer in checkMaintenanceTimer is %ld\n",get_global_maintenance_time());
+
+	if(cur_time_in_sec >= get_global_maintenance_time())
 	{
 		set_global_secondary_docs(true);
 		WebcfgInfo("Rand time is equal to current time\n");
@@ -891,21 +888,47 @@ int readFWFiles(char* file_path, int range)
 int maintenanceSyncSeconds()
 {
 	struct timespec ct;
-	int maintenance_secs = 0;
+	long maintenance_secs = 0;
+	long current_time_in_sec = 0;
+	long sec_to_12 = 0;
 	long long current_time = 0;
 	clock_gettime(CLOCK_REALTIME, &ct);
 
 	current_time = ct.tv_sec;
-	maintenance_secs =  get_global_maintenance_time() - current_time;
-	WebcfgInfo("The current time in maintenanceSyncSeconds is %lld\n",current_time);
-	WebcfgInfo("The current time in maintenanceSyncSeconds is %lld\n",get_global_maintenance_time());
-	WebcfgInfo("The maintenance Seconds is %d\n", maintenance_secs);
-	if (maintenance_secs > 0)
+	current_time_in_sec = getTimeInSeconds(current_time);
+
+	maintenance_secs =  get_global_maintenance_time() - current_time_in_sec;
+
+	WebcfgInfo("The current time in maintenanceSyncSeconds is %lld at %s\n",current_time, printTime(current_time));
+	WebcfgInfo("The random timer in maintenanceSyncSeconds is %ld\n",get_global_maintenance_time());
+
+	if (maintenance_secs < 0)
 	{
-		return maintenance_secs;
+		sec_to_12 = 86400 - current_time_in_sec;
+		maintenance_secs = sec_to_12 + get_global_maintenance_time();
 	}
-	else
-	{
-		return 0;
-	}
+
+	WebcfgInfo("The maintenance Seconds is %ld\n", maintenance_secs);
+
+	return maintenance_secs;
+}
+
+long getTimeInSeconds(long long time)
+{
+	struct tm cts;
+	time_t time_value = time;
+	long cur_time_hrs_in_sec = 0;
+	long cur_time_min_in_sec = 0;
+	long cur_time_sec_in_sec = 0;
+	long sec_of_cur_time = 0;
+
+	cts = *localtime(&time_value);
+
+	cur_time_hrs_in_sec = cts.tm_hour * 60 * 60;
+	cur_time_min_in_sec = cts.tm_min * 60;
+	cur_time_sec_in_sec = cts.tm_sec;
+
+	sec_of_cur_time = cur_time_hrs_in_sec + cur_time_min_in_sec + cur_time_sec_in_sec;
+
+	return sec_of_cur_time;
 }

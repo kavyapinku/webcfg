@@ -93,5 +93,6 @@ int checkSyncClash();
 void initMaintenanceTimer();
 int checkMaintenanceTimer();
 int readFWFiles(char* file_path, int range);
+long getTimeInSeconds(long long time);
 int maintenanceSyncSeconds();
 #endif
