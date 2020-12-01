@@ -64,7 +64,6 @@ static long long g_rand_time = 0;
 #ifdef MULTIPART_UTILITY
 static int g_testfile = 0;
 #endif
-static char timebuf[80] = {'\0'};;
 /*----------------------------------------------------------------------------*/
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
@@ -700,12 +699,12 @@ int secondarySyncSeconds()
 char* printTime(long long time)
 {
 	struct tm  ts;
-	//char       buf[80];
+	static char buf[80] = "";
 
 	// Format time, "ddd yymmdd hh:mm:ss zzz"
 	time_t rawtime = time;
 	ts = *localtime(&rawtime);
-	strftime(timebuf, sizeof(timebuf), "%a %y%m%d %H:%M:%S", &ts);
+	strftime(buf, sizeof(buf), "%a %y%m%d %H:%M:%S", &ts);
 	//WebcfgInfo("The time in readable format %s\n", buf);
-	return timebuf;
+	return buf;
 }
