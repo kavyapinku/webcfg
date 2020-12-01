@@ -92,7 +92,7 @@ void set_global_secondary_docs(bool secondary_docs);
 int checkSyncClash();
 void initMaintenanceTimer();
 int checkMaintenanceTimer();
-int readFWFiles(char* file_path, int range);
+int readFWFiles(char* file_path, long *range);
 long getTimeInSeconds(long long time);
 int maintenanceSyncSeconds();
 #endif

@@ -791,13 +791,13 @@ void initMaintenanceTimer()
 	long fw_start_time = 0;
 	long fw_end_time = 0;
 
-	if( readFWFiles(FW_START_FILE, fw_start_time) != WEBCFG_SUCCESS )
+	if( readFWFiles(FW_START_FILE, &fw_start_time) != WEBCFG_SUCCESS )
 	{
 		fw_start_time = MIN_MAINTENANCE_TIME;
 		WebcfgInfo("Inside failure case start_time\n");
 	}
 
-	if( readFWFiles(FW_END_FILE, fw_end_time) != WEBCFG_SUCCESS )
+	if( readFWFiles(FW_END_FILE, &fw_end_time) != WEBCFG_SUCCESS )
 	{
 		fw_end_time = MAX_MAINTENANCE_TIME;
 		WebcfgInfo("Inside failure case end_time\n");
@@ -852,7 +852,7 @@ int checkMaintenanceTimer()
 	return 0;
 }
 
-int readFWFiles(char* file_path, int range)
+int readFWFiles(char* file_path, long *range)
 {
 	FILE *fp = NULL;
 	char *data = NULL;
@@ -883,9 +883,9 @@ int readFWFiles(char* file_path, int range)
 
 	WebcfgInfo("The data is %s\n", data);
 
-	range = atoi(data);
+	*range = atoi(data);
 
-	WebcfgInfo("The range is %d\n", range);
+	WebcfgInfo("The range is %ld\n", *range);
 	WEBCFG_FREE(data);
 	fclose(fp);
 
