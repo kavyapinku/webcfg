@@ -122,9 +122,9 @@ void *WebConfigMultipartTask(void *status)
 
 	processWebconfgSync((int)Status);
 
-	initMaintenanceTimer();
+	initMaintenanceTimer();				//Initialising Maintenance Timer
 
-	initRandomTimer();
+	initRandomTimer();				//Initialising Random Timer
 
 	while(1)
 	{
@@ -149,11 +149,12 @@ void *WebConfigMultipartTask(void *status)
 				processWebconfgSync((int)Status);
 				set_global_secondary_docs(false);
 			}
-			else if(maintenance_doc_sync == 1 && checkMaintenanceTimer() == 1 && checkSyncClash() == 0)
+			else if(maintenance_doc_sync == 1 && checkMaintenanceTimer() == 1 && checkMaintenanceWindow() == 0)
 			{
 				WebcfgInfo("Triggered Supplementary doc boot sync\n");
-				maintenance_doc_sync = 0;
 				processWebconfgSync((int)Status);
+				initMaintenanceTimer();
+				maintenance_doc_sync = 0;
 				set_global_secondary_docs(false);
 			}
 		}
@@ -166,7 +167,7 @@ void *WebConfigMultipartTask(void *status)
 
 		if (secondary_doc_sync == 0 )
 		{
-			value =  secondarySyncSeconds();
+			value =  secondarySyncSeconds();   //To calculate the exact wait time from current time
 			WebcfgInfo("The secondarySyncSeconds value is %d\n",value);
 
 			ts.tv_sec += value;
@@ -174,7 +175,7 @@ void *WebConfigMultipartTask(void *status)
 		}
 		else
 		{
-			value =  maintenanceSyncSeconds();
+			value =  maintenanceSyncSeconds();  //To calculate the exact wait time from current time
 			maintenance_doc_sync = 1;
 			WebcfgInfo("The maintenanceSyncSeconds value is %d\n",value);
 
@@ -693,7 +694,7 @@ void JoinThread (pthread_t threadId)
 	}
 }
 
-
+//To initialise Random timer
 void initRandomTimer()
 {
 	int time_val = 0;
@@ -711,6 +712,7 @@ void initRandomTimer()
 	
 }
 
+//To check whether the timer is at current_time
 int checkRandomTimer()
 {
 	long long cur_time = 0;
@@ -730,6 +732,7 @@ int checkRandomTimer()
 
 }
 
+//To get the wait seconds
 int secondarySyncSeconds()
 {
 	struct timespec ct;
@@ -738,7 +741,7 @@ int secondarySyncSeconds()
 	clock_gettime(CLOCK_REALTIME, &ct);
 
 	current_time = ct.tv_sec;
-	sync_secs =  get_global_rand_time() - current_time;
+	sync_secs =  get_global_rand_time() - current_time;     //To get the exact wait time in seconds
 	WebcfgInfo("The current time in secondarySyncSeconds is %lld at %s\n",current_time, printTime(current_time));
 	WebcfgInfo("The rand time in secondarySyncSeconds is %lld\n",get_global_rand_time());
 	WebcfgInfo("The Sync Secons is %d\n", sync_secs);
@@ -752,6 +755,7 @@ int secondarySyncSeconds()
 	}
 }
 
+//To print the value in readable format
 char* printTime(long long time)
 {
 	struct tm  ts;
@@ -761,11 +765,11 @@ char* printTime(long long time)
 	time_t rawtime = time;
 	ts = *localtime(&rawtime);
 	strftime(buf, sizeof(buf), "%a %y%m%d %H:%M:%S", &ts);
-	//WebcfgInfo("The time in readable format %s\n", buf);
 	return buf;
 }
 
-int checkSyncClash()
+//To check whether the random sync is within the maintenance window
+int checkMaintenanceWindow()
 {
 	long boot_sync_time, maintenance_start_time, maintenance_end_time = 0;
 	boot_sync_time = getTimeInSeconds(get_global_rand_time());
@@ -779,12 +783,14 @@ int checkSyncClash()
 
 	if( boot_sync_time >= maintenance_start_time && boot_sync_time <= maintenance_end_time)
 	{
+		WebcfgInfo("The Maintenance Sync is skipped, has boot sync happened in Maintenance window\n");
 		return 1;
 	}
 
 	return 0;
 }
 
+//To initialise maintenance random timer
 void initMaintenanceTimer()
 {
 	long time_val = 0;
@@ -812,7 +818,7 @@ void initMaintenanceTimer()
 
 	if( fw_start_time > fw_end_time )
 	{
-		fw_start_time = fw_start_time - 86400;
+		fw_start_time = fw_start_time - 86400;         //to get a time within the day
 		WebcfgInfo("Inside start time is greater than end time\n");
 	}
 
@@ -821,14 +827,21 @@ void initMaintenanceTimer()
 
         srand(time(0));
         time_val = (rand() % (fw_end_time - fw_start_time+ 1)) + fw_start_time;
-	WebcfgInfo("The value of maintenance_time_val is %ld\n",time_val);
+
 	WebcfgInfo("The fw_start_time is %ld\n",get_global_fw_start_time());
 	WebcfgInfo("The fw_end_time is %ld\n",get_global_fw_end_time());
 
+	if( time_val <= 0)
+	{
+		time_val = time_val + 86400;         //To set a time in next day
+	}
+
+	WebcfgInfo("The value of maintenance_time_val is %ld\n",time_val);
 	set_global_maintenance_time(time_val);
 
 }
 
+//To Check whether the Maintenance time is at current time
 int checkMaintenanceTimer()
 {
 	struct timespec rt;
@@ -852,6 +865,7 @@ int checkMaintenanceTimer()
 	return 0;
 }
 
+//To read the start and end time from the file
 int readFWFiles(char* file_path, long *range)
 {
 	FILE *fp = NULL;
@@ -892,6 +906,7 @@ int readFWFiles(char* file_path, long *range)
 	return WEBCFG_SUCCESS;
 }
 
+//To get the wait seconds for Maintenance Time
 int maintenanceSyncSeconds()
 {
 	struct timespec ct;
@@ -911,8 +926,8 @@ int maintenanceSyncSeconds()
 
 	if (maintenance_secs < 0)
 	{
-		sec_to_12 = 86400 - current_time_in_sec;
-		maintenance_secs = sec_to_12 + get_global_maintenance_time();
+		sec_to_12 = 86400 - current_time_in_sec;               //Getting the remaining time for midnight 12
+		maintenance_secs = sec_to_12 + get_global_maintenance_time();//Adding with Maintenance wait time for nextday trigger
 	}
 
 	WebcfgInfo("The maintenance Seconds is %ld\n", maintenance_secs);
@@ -920,6 +935,7 @@ int maintenanceSyncSeconds()
 	return maintenance_secs;
 }
 
+//To get the Seconds from Epoch Time
 long getTimeInSeconds(long long time)
 {
 	struct tm cts;
