@@ -96,27 +96,14 @@ void tunneldoc_destroy( tunneldoc_t *td )
 		{
 			for(i = 0; i< td->entries_count; i++)
 			{
-				if( NULL != td->entries[i].gre_name )
+				if( NULL != td->entries[i].gre_primary_endpoint )
 				{
-					free(td->entries[i].gre_name);
+					free(td->entries[i].gre_primary_endpoint);
 				}
-				if( NULL != td->entries[i].gre_primaryendpoint)
+				if( NULL != td->entries[i].gre_sec_endpoint)
 				{
-					free(td->entries[i].gre_primaryendpoint);
+					free(td->entries[i].gre_sec_endpoint);
 				}
-				if( NULL != td->entries[i].gre_secep )
-				{
-					free(td->entries[i].gre_secep);
-				}
-				if( NULL != td->entries[i].gre_dev )
-				{
-					free(td->entries[i].gre_dev);
-				}
-				if( NULL != td->entries[i].dscp )
-				{
-					free(td->entries[i].dscp);
-				}
-
 				if( NULL != td->entries[i].table_param )
 				{
 					if( NULL != td->entries[i].table_param->entries )
@@ -126,14 +113,6 @@ void tunneldoc_destroy( tunneldoc_t *td )
 							if( NULL != td->entries[i].table_param->entries[j].vap_name )
 							{
 								free(td->entries[i].table_param->entries[j].vap_name);
-							}
-							if( NULL != td->entries[i].table_param->entries[j].vlan )
-							{
-								free(td->entries[i].table_param->entries[j].vlan);
-							}
-							if( NULL != td->entries[i].table_param->entries[j].bridge )
-							{
-								free(td->entries[i].table_param->entries[j].bridge);
 							}
 						
 						}
@@ -224,10 +203,12 @@ const char* pamdoc_strerror( int errnum )
 int process_tunnel_tableparams( tunnel_t *e, msgpack_object_map *map )
 {
     int left = map->size;
-    uint8_t objects_left = 0x04;
+    uint8_t objects_left = 0x03;
     msgpack_object_kv *p;
     p = map->ptr;
-
+    WebcfgDebug("Starting of tunnel table params\n");
+    WebcfgDebug("The left value is %d\n", left);
+    WebcfgDebug("The objects_left value is %d\n", objects_left);
     while( (0 < objects_left) && (0 < left--) )
     {
         if( MSGPACK_OBJECT_STR == p->key.type )
@@ -238,16 +219,28 @@ int process_tunnel_tableparams( tunnel_t *e, msgpack_object_map *map )
                  {
                      e->vap_name = strndup( p->val.via.str.ptr, p->val.via.str.size );
                      objects_left &= ~(1 << 0);
+                     WebcfgDebug("Inside vap_name\n");
+		     WebcfgDebug("The left value is %d\n", left);
+    WebcfgDebug("The objects_left value is %d\n", objects_left);
                  }
-                 if( 0 == match(p, "vlan") )
+              }
+              else if( MSGPACK_OBJECT_POSITIVE_INTEGER == p->val.type )
+              {
+                 if( 0 == match(p, "wan_vlan") )
                  {
-                     e->vlan = strndup( p->val.via.str.ptr, p->val.via.str.size );
-                     objects_left &= ~(1 << 1);
-                 }
-                 if( 0 == match(p, "bridge") )
-                 {
-                     e->bridge = strndup( p->val.via.str.ptr, p->val.via.str.size );
-                     objects_left &= ~(1 << 3);
+                     if( UINT16_MAX < p->val.via.u64 )
+                     {
+                         errno = INVALID_DATATYPE;
+                         return -1;
+                     }
+                     else
+                     {
+                         e->wan_vlan = (unsigned int) p->val.via.u64;
+			WebcfgDebug("Inside wan_vlan\n");
+		     WebcfgDebug("The left value is %d\n", left);
+    WebcfgDebug("The objects_left value is %d\n", objects_left);
+                     }
+                     objects_left &= ~(1 << 2);
                  }
               }
               else if( MSGPACK_OBJECT_BOOLEAN == p->val.type )
@@ -255,7 +248,10 @@ int process_tunnel_tableparams( tunnel_t *e, msgpack_object_map *map )
                  if( 0 == match(p, "enable") )
                  {
                      e->enable = p->val.via.boolean;
-                     objects_left &= ~(1 << 2);
+                     objects_left &= ~(1 << 1);
+		     WebcfgDebug("Inside enable\n");
+		     WebcfgDebug("The left value is %d\n", left);
+    WebcfgDebug("The objects_left value is %d\n", objects_left);
                  }
               }
 
@@ -263,7 +259,8 @@ int process_tunnel_tableparams( tunnel_t *e, msgpack_object_map *map )
            p++;
     }
         
-    
+     WebcfgDebug("The Final left value is %d\n", left);
+    WebcfgDebug("The Final objects_left value is %d\n", objects_left);
     if( 1 & objects_left ) {
     } else {
         errno = OK;
@@ -284,49 +281,62 @@ int process_tunnelparams( tdoc_t *e, msgpack_object_map *map )
 {
     int left = map->size;
     size_t i =0;
-    uint8_t objects_left = 0x07;
+    uint8_t objects_left = 0x08;
     msgpack_object_kv *p;
     p = map->ptr;
+    WebcfgDebug("The Initial left value is %d\n", left);
+    WebcfgDebug("The Initial objects_left value is %d\n", objects_left/2);
     while( (0 < objects_left) && (0 < left--) )
     {
         if( MSGPACK_OBJECT_STR == p->key.type )
         {
               if( MSGPACK_OBJECT_BOOLEAN == p->val.type )
               {
-                 if( 0 == match(p, "enable") )
+                 if( 0 == match(p, "gre_enable") )
                  {
-                     e->enable = p->val.via.boolean;
-                     objects_left &= ~(1 << 0);
+                     e->gre_enable = p->val.via.boolean;
+                     objects_left = objects_left >> 1;
+                     WebcfgDebug("Inside gre_enable\n");
+                     WebcfgDebug("The left value is %d\n", left);
+                     WebcfgDebug("The objects_left value is %d\n", objects_left/2);
                  }
               }
               else if(MSGPACK_OBJECT_STR == p->val.type)
               {
-                 if( 0 == match(p, "gre_name") )
+                 if( 0 == match(p, "gre_primary_endpoint") )
                  {
-                     e->gre_name = strndup( p->val.via.str.ptr, p->val.via.str.size );
-                     objects_left &= ~(1 << 1);
+                     e->gre_primary_endpoint = strndup( p->val.via.str.ptr, p->val.via.str.size );
+                     objects_left = objects_left >> 1;
+                     WebcfgDebug("Inside gre_primary_endpoint\n");
+                     WebcfgDebug("The left value is %d\n", left);
+                     WebcfgDebug("The objects_left value is %d\n", objects_left/2);
                  }
-                 if( 0 == match(p, "gre_primaryendpoint") )
+                 if( 0 == match(p, "gre_sec_endpoint") )
                  {
-                     e->gre_primaryendpoint = strndup( p->val.via.str.ptr, p->val.via.str.size );
-                     objects_left &= ~(1 << 3);
+                     e->gre_sec_endpoint = strndup( p->val.via.str.ptr, p->val.via.str.size );
+                     objects_left = objects_left >> 1;
+                     WebcfgDebug("Inside gre_sec_endpoint\n");
+                     WebcfgDebug("The left value is %d\n", left);
+                     WebcfgDebug("The objects_left value is %d\n", objects_left/2);
                  }
-                 if( 0 == match(p, "gre_secep") )
+              }
+              else if( MSGPACK_OBJECT_POSITIVE_INTEGER == p->val.type )
+              {
+                 if( 0 == match(p, "gre_dscp") )
                  {
-                     e->gre_secep = strndup( p->val.via.str.ptr, p->val.via.str.size );
-                     objects_left &= ~(1 << 4);
+                     if( UINT16_MAX < p->val.via.u64 )
+                     {
+                         errno = INVALID_DATATYPE;
+                         return -1;
+                     }
+                     else
+                     {
+                         e->gre_dscp = (int) p->val.via.u64;
+                         WebcfgDebug("Inside gre_dscp\n");
+                         WebcfgDebug("The left value is %d\n", left);
+                         WebcfgDebug("The objects_left value is %d\n", objects_left/2);
+                     }
                  }
-                 if( 0 == match(p, "gre_dev") )
-                 {
-                     e->gre_dev = strndup( p->val.via.str.ptr, p->val.via.str.size );
-                     objects_left &= ~(1 << 5);
-                 }
-                 if( 0 == match(p, "dscp") )
-                 {
-                     e->dscp = strndup( p->val.via.str.ptr, p->val.via.str.size );
-                     objects_left &= ~(1 << 6);
-                 }
-
               }
               else if( MSGPACK_OBJECT_ARRAY == p->val.type )
               {
@@ -363,20 +373,28 @@ int process_tunnelparams( tdoc_t *e, msgpack_object_map *map )
 
                           if( 0 != process_tunnel_tableparams(&e->table_param->entries[i], &p->val.via.array.ptr[i].via.map) )
                           {
-		              WebcfgDebug("process_dnsparams failed\n");
+		              WebcfgDebug("process_tunnel_tableparams failed\n");
                               return -1;
                           }
            
                       }
 		      WebcfgDebug("Inside tunnel table\n");
-                      objects_left &= ~(1 << 2);
+                      objects_left = objects_left >> 1;
+                     WebcfgDebug("Inside array part\n");
+                     WebcfgDebug("The left value is %d\n", left);
+                     WebcfgDebug("The objects_left value is %d\n", objects_left/2);
                 }
              }
         }
            p++;
     }
-        
-    
+    WebcfgDebug("The Final left value is %d\n", left);
+    WebcfgDebug("The Final objects_left value is %d\n", objects_left/2);  
+   if(e->gre_enable == 0)
+    {
+        objects_left = objects_left >> 1;
+        WebcfgDebug("The condition check objects_left value is %d\n", objects_left/2);
+    }
     if( 1 & objects_left ) {
     } else {
         errno = OK;
@@ -514,13 +532,12 @@ int process_tunneldoc( tunneldoc_t *td,int num, ... )
 			}
 			if( 0 != process_tunnelparams(&td->entries[i], &array->ptr[i].via.map))
 			{
-				WebcfgError("process_pamparams failed\n");
+				WebcfgError("process_tunnelparams failed\n");
 				return -1;
 			}
 		}
 	}
 	
-
     return 0;
 }
 

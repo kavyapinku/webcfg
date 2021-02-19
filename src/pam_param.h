@@ -26,10 +26,9 @@ typedef struct
 
 typedef struct
 {
-    char * vap_name;
-    char * vlan;
-    char * bridge;
-    bool   enable;      
+    char *        vap_name;
+    unsigned int  wan_vlan;
+    bool          enable;      
 } tunnel_t;
 
 typedef struct
@@ -40,12 +39,10 @@ typedef struct
 
 
 typedef struct {
-    char *        gre_name;
-    char *        gre_primaryendpoint;
-    char *        gre_secep;
-    char *        gre_dev;
-    char *        dscp;
-    bool          enable;
+    char *        gre_primary_endpoint;
+    char *        gre_sec_endpoint;
+    int           gre_dscp;
+    bool          gre_enable;
     tunnelTable_t * table_param;
 } tdoc_t;
 
@@ -60,7 +57,6 @@ typedef struct
     char *name;
     char *value;
     uint32_t   value_size;
-    uint16_t type;
 } pparam_t;
 
 typedef struct {
