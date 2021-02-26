@@ -277,7 +277,7 @@ void test_pam_unpack()
 
 	printf("------------------------------\n");
 	packRootData = ( data1_t * ) malloc( sizeof( data1_t ) );
-	if(packRootData != NULL)
+	if(packRootData != NULL && tunnelfileData != NULL && wififileData != NULL)
 	{
 		printf("went here\n");
 		memset(packRootData, 0, sizeof(data1_t));
@@ -324,6 +324,7 @@ void pamUnpack(char *blob)
 	int err;
 	int i ,j =0;
 	int td_count = 0;
+	char * wifi_encoded_data = NULL;
 
 	if(blob != NULL)
 	{
@@ -408,6 +409,8 @@ void pamUnpack(char *blob)
 					printf("td entries count is %d\n", td_count);
 					tunneldoc_destroy(td);
 				}
+                                wifi_encoded_data = append_wifi_doc("PublicHotspotData",pd->version,pd->transaction_id,pd->entries[1].value, pd->entries[1].value_size);
+				WebcfgDebug("The encoded Wifi_value is %s\n", wifi_encoded_data);
 				if(wd != NULL)
 				{
 					printf("WiFi wd->entries_count is %d\n", (int)wd->entries_count);

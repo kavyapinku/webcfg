@@ -18,6 +18,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <base64.h>
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
@@ -35,6 +36,14 @@ enum {
 };
 typedef int (*process1_fn_t)(void *, int, ...);
 typedef void (*destroy1_fn_t)(void *);
+
+//for wifidoc append
+typedef struct wifi_appenddoc_struct{
+    char * subdoc_name;
+    uint32_t  version;
+    uint16_t   transaction_id;
+    size_t *count;
+}wifi_appenddoc_t;
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
@@ -60,9 +69,14 @@ void* comp_helper_convert( const void *buf, size_t len,
                       msgpack_object_type expect_type, bool optional,
                       process1_fn_t process,
                       destroy1_fn_t destroy );
-void* helper_convert_array( const void *buf, size_t len,
-                      size_t struct_size, const char *wrapper,
-                      msgpack_object_type expect_type, bool optional,
-                      process1_fn_t process,
-                      destroy1_fn_t destroy );
+
+ssize_t wifi_pack_appenddoc(const wifi_appenddoc_t *appenddocData,void **data);
+
+char * base64wifiblobencoder(char * blob_data, size_t blob_size );
+
+size_t appendWifiEncodedData( void **appendData, void *encodedBuffer, size_t encodedSize, void *metadataPack, size_t metadataSize );
+
+char * append_wifi_doc(char * subdoc_name, uint32_t version, uint16_t trans_id, char * blob_data, size_t blob_size);
+
+void msgpack_print(const void *data, size_t len);
 #endif
