@@ -18,7 +18,7 @@
 #include <msgpack.h>
 #include <stdarg.h>
 #include "webcfg_log.h"
-#include "comp_helpers.h"
+#include "msgpack_blob_parser.h"
 #include "pam_param.h"
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
@@ -28,16 +28,11 @@
 /*                               Data Structures                              */
 /*----------------------------------------------------------------------------*/
 enum {
-    OK                       = T_HELPERS_OK,
-    OUT_OF_MEMORY            = T_HELPERS_OUT_OF_MEMORY,
-    INVALID_FIRST_ELEMENT    = T_HELPERS_INVALID_FIRST_ELEMENT,
-    MISSING_ENTRY         = T_HELPERS_MISSING_WRAPPER,
-    INVALID_PORT_RANGE,
-    INVALID_PORT_NUMBER,
-    INVALID_INTERNAL_IPV4,
-    BOTH_IPV4_AND_IPV6_TARGETS_EXIST,
-    INVALID_IPV6,
-    MISSING_INTERNAL_PORT,
+    OK                       = MSGPACK_OK,
+    OUT_OF_MEMORY            = MSGPACK_OUT_OF_MEMORY,
+    INVALID_FIRST_ELEMENT    = MSGPACK_INVALID_ELEMENT,
+    MISSING_ENTRY         = MSGPACK_MISSING_WRAPPER,
+    UNPACK_FAILED         = MSGPACK_UNPACK_FAILED,
     INVALID_DATATYPE,
     MISSING_TARGET_IP,
     MISSING_PORT_RANGE,
@@ -64,26 +59,26 @@ int process_wifi_doc( wifi_doc_t *wd,int num, ... );
 /* See xdnsdoc.h for details. */
 pamparam_t* pamdoc_convert( const void *buf, size_t len )
 {
-	return comp_helper_convert( buf, len, sizeof(pamparam_t), "PublicHotspotData", 
+	return msgpack_process( buf, len, sizeof(pamparam_t), "PublicHotspotData", 
                             MSGPACK_OBJECT_ARRAY, true,
-                           (process1_fn_t) process_pamdoc,
-                           (destroy1_fn_t) pamdoc_destroy );
+                           (process2_fn_t) process_pamdoc,
+                           (destroy2_fn_t) pamdoc_destroy, 2 );
 }
 
 tunneldoc_t* tunneldoc_convert(const void *buf, size_t len)
 {
-	return comp_helper_convert( buf, len, sizeof(tunneldoc_t), "Tunnels", 
+	return msgpack_process( buf, len, sizeof(tunneldoc_t), "Tunnels", 
                             MSGPACK_OBJECT_ARRAY, true,
-                           (process1_fn_t) process_tunneldoc,
-                           (destroy1_fn_t) tunneldoc_destroy );
+                           (process2_fn_t) process_tunneldoc,
+                           (destroy2_fn_t) tunneldoc_destroy, 1 );
 }
 
 wifi_doc_t* wifi_doc_convert(const void *buf, size_t len)
 {
-	return comp_helper_convert( buf, len, sizeof(tunneldoc_t), "Wifi_SSID_Config", 
+	return msgpack_process( buf, len, sizeof(tunneldoc_t), "Wifi_SSID_Config", 
                             MSGPACK_OBJECT_ARRAY, true,
-                           (process1_fn_t) process_wifi_doc,
-                           (destroy1_fn_t) wifi_doc_destroy );
+                           (process2_fn_t) process_wifi_doc,
+                           (destroy2_fn_t) wifi_doc_destroy, 1);
 }
 /* See xdnsdoc.h for details. */
 void tunneldoc_destroy( tunneldoc_t *td )
@@ -178,6 +173,7 @@ const char* pamdoc_strerror( int errnum )
         { .v = INVALID_FIRST_ELEMENT,            .txt = "Invalid first element." },
         { .v = INVALID_VERSION,                 .txt = "Invalid 'version' value." },
         { .v = INVALID_OBJECT,                .txt = "Invalid 'value' array." },
+	{ .v = UNPACK_FAILED,                .txt = "Msgpack Unpack Failed" },
         { .v = 0, .txt = NULL }
     };
     int i = 0;
@@ -215,7 +211,7 @@ int process_tunnel_tableparams( tunnel_t *e, msgpack_object_map *map )
         {
               if(MSGPACK_OBJECT_STR == p->val.type)
               {
-                 if( 0 == match(p, "vap_name") )
+                 if( 0 == match1(p, "vap_name") )
                  {
                      e->vap_name = strndup( p->val.via.str.ptr, p->val.via.str.size );
                      objects_left &= ~(1 << 0);
@@ -226,7 +222,7 @@ int process_tunnel_tableparams( tunnel_t *e, msgpack_object_map *map )
               }
               else if( MSGPACK_OBJECT_POSITIVE_INTEGER == p->val.type )
               {
-                 if( 0 == match(p, "wan_vlan") )
+                 if( 0 == match1(p, "wan_vlan") )
                  {
                      if( UINT16_MAX < p->val.via.u64 )
                      {
@@ -245,7 +241,7 @@ int process_tunnel_tableparams( tunnel_t *e, msgpack_object_map *map )
               }
               else if( MSGPACK_OBJECT_BOOLEAN == p->val.type )
               {
-                 if( 0 == match(p, "enable") )
+                 if( 0 == match1(p, "enable") )
                  {
                      e->enable = p->val.via.boolean;
                      objects_left &= ~(1 << 1);
@@ -292,7 +288,7 @@ int process_tunnelparams( tdoc_t *e, msgpack_object_map *map )
         {
               if( MSGPACK_OBJECT_BOOLEAN == p->val.type )
               {
-                 if( 0 == match(p, "gre_enable") )
+                 if( 0 == match1(p, "gre_enable") )
                  {
                      e->gre_enable = p->val.via.boolean;
                      objects_left = objects_left >> 1;
@@ -303,7 +299,7 @@ int process_tunnelparams( tdoc_t *e, msgpack_object_map *map )
               }
               else if(MSGPACK_OBJECT_STR == p->val.type)
               {
-                 if( 0 == match(p, "gre_primary_endpoint") )
+                 if( 0 == match1(p, "gre_primary_endpoint") )
                  {
                      e->gre_primary_endpoint = strndup( p->val.via.str.ptr, p->val.via.str.size );
                      objects_left = objects_left >> 1;
@@ -311,7 +307,7 @@ int process_tunnelparams( tdoc_t *e, msgpack_object_map *map )
                      WebcfgDebug("The left value is %d\n", left);
                      WebcfgDebug("The objects_left value is %d\n", objects_left/2);
                  }
-                 if( 0 == match(p, "gre_sec_endpoint") )
+                 if( 0 == match1(p, "gre_sec_endpoint") )
                  {
                      e->gre_sec_endpoint = strndup( p->val.via.str.ptr, p->val.via.str.size );
                      objects_left = objects_left >> 1;
@@ -322,7 +318,7 @@ int process_tunnelparams( tdoc_t *e, msgpack_object_map *map )
               }
               else if( MSGPACK_OBJECT_POSITIVE_INTEGER == p->val.type )
               {
-                 if( 0 == match(p, "gre_dscp") )
+                 if( 0 == match1(p, "gre_dscp") )
                  {
                      if( UINT16_MAX < p->val.via.u64 )
                      {
@@ -340,7 +336,7 @@ int process_tunnelparams( tdoc_t *e, msgpack_object_map *map )
               }
               else if( MSGPACK_OBJECT_ARRAY == p->val.type )
               {
-                 if( 0 == match(p, "tunnel_network") )
+                 if( 0 == match1(p, "tunnel_network") )
                  {
                       e->table_param = (tunnelTable_t *) malloc( sizeof(tunnelTable_t) );
                       if( NULL == e->table_param )
@@ -416,12 +412,12 @@ int process_pamparams( pparam_t *e, msgpack_object_map *map )
 	{
         	if( MSGPACK_OBJECT_STR == p->val.type )
 		{
-		        if( 0 == match(p, "name") )
+		        if( 0 == match1(p, "name") )
 			{
 		            e->name = strndup( p->val.via.str.ptr, p->val.via.str.size );
 		            objects_left &= ~(1 << 0);
 		        }
-			if( 0 == match(p, "value"))
+			if( 0 == match1(p, "value"))
 			{
 				WebcfgDebug("blob size update\n");
 				e->value = malloc(sizeof(char) * p->val.via.str.size+1 );
@@ -448,24 +444,27 @@ int process_pamparams( pparam_t *e, msgpack_object_map *map )
 
 int process_pamdoc( pamparam_t *pd,int num, ... )
 {
+	if(pd != NULL)
+	{
 //To access the variable arguments use va_list 
 	va_list valist;
 	va_start(valist, num);//start of variable argument loop
-
+	printf("check\n");
 	msgpack_object *obj = va_arg(valist, msgpack_object *);//each usage of va_arg fn argument iterates by one time
 	msgpack_object_array *array = &obj->via.array;
-
+	printf("check\n");
 	msgpack_object *obj1 = va_arg(valist, msgpack_object *);
+	printf("check\n");
 	pd->subdoc_name = strndup( obj1->via.str.ptr, obj1->via.str.size );
-
+	printf("check\n");
 	msgpack_object *obj2 = va_arg(valist, msgpack_object *);
 	pd->version = (uint32_t) obj2->via.u64;
-
+	printf("check\n");
 	msgpack_object *obj3 = va_arg(valist, msgpack_object *);
 	pd->transaction_id = (uint16_t) obj3->via.u64;
 
 	va_end(valist);//End of variable argument loop
-
+	printf("before array check\n");
 	if( 0 < array->size )
 	{
 		size_t i;
@@ -494,6 +493,7 @@ int process_pamdoc( pamparam_t *pd,int num, ... )
 			}
 		}
 	}
+}
 	
 
     return 0;
@@ -548,16 +548,12 @@ int process_wifi_doc( wifi_doc_t *wd,int num, ... )
 	va_start(valist, num);//start of variable argument loop
 
 	msgpack_object *obj = va_arg(valist, msgpack_object *);//each usage of va_arg fn argument iterates by one time
-	msgpack_object_array *array = &obj->via.array;
 
 	va_end(valist);//End of variable argument loop
 
-	if( 0 < array->size )
-	{
-		wd->entries_count = array->size;
-		WebcfgDebug("The wifi doc array size is %d\n", (int)wd->entries_count);
+	wd->entries_count = msgpack_array_count(obj);
+	WebcfgDebug("The wifi doc array size is %d\n", (int)wd->entries_count);
 		
-	}
 
     return 0;
 }

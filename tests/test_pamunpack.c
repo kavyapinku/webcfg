@@ -29,7 +29,7 @@
 #include "../src/webcfg_db.h"
 #include "../src/pam_param.h"
 #include "../src/webcfg_aker.h"
-#include "../src/comp_helpers.h"
+#include "../src/msgpack_blob_parser.h"
 #include "../src/webcfg_metadata.h"
 #include "../src/webcfg_event.h"
 #include "../src/webcfg_auth.h"
