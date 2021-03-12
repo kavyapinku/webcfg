@@ -59,6 +59,10 @@ static void __msgpack_pack_string_nvp( msgpack_packer *pk,
                                        const struct webcfg_token *token,
                                        const char *val );
 
+static void __msgpack_pack_string_nvp1( msgpack_packer *pk,
+                                       const struct webcfg_token *token,
+                                       const char *val, int size );
+
 static void __msgpack_pack_string( msgpack_packer *pk, const void *string, size_t n )
 {
     msgpack_pack_str( pk, n );
@@ -75,6 +79,15 @@ static void __msgpack_pack_string_nvp( msgpack_packer *pk,
     }
 }
 
+static void __msgpack_pack_string_nvp1( msgpack_packer *pk,
+                                       const struct webcfg_token *token,
+                                       const char *val, int size )
+{
+    if( ( NULL != token ) && ( NULL != val ) ) {
+        __msgpack_pack_string( pk, token->name, token->length );
+        __msgpack_pack_string( pk, val, size );
+    }
+}
 
 ssize_t webcfgdb_blob_pack(webconfig_db_data_t *webcfgdb, webconfig_tmp_data_t * webcfgtemp, void **data)
 {
@@ -342,16 +355,16 @@ ssize_t webcfg_pack_rootdoc(const data1_t *packData, void **data )
 	msgpack_pack_map( &pk, 2); //name, value, type
 	    struct webcfg_token PAM_MAP_NAME;
 
-            PAM_MAP_NAME.name = "name";
-            PAM_MAP_NAME.length = strlen( "name" );
+            PAM_MAP_NAME.name = "Name";
+            PAM_MAP_NAME.length = strlen( "Name" );
 		printf("The count is %d\n", count);
             __msgpack_pack_string_nvp( &pk, &PAM_MAP_NAME, packData->data_items[i].name );
             
 	    struct webcfg_token PAM_MAP_VALUE;
 
-            PAM_MAP_VALUE.name = "value";
-            PAM_MAP_VALUE.length = strlen( "value" );
-	    __msgpack_pack_string_nvp( &pk, &PAM_MAP_VALUE, packData->data_items[i].value );
+            PAM_MAP_VALUE.name = "Value";
+            PAM_MAP_VALUE.length = strlen( "Value" );
+	    __msgpack_pack_string_nvp1( &pk, &PAM_MAP_VALUE, packData->data_items[i].value, (int)packData->data_items[i].value_size );
 
 	}
 

@@ -365,6 +365,7 @@ size_t appendWifiEncodedData( void **appendData, void *encodedBuffer, size_t enc
 	WebcfgInfo("subdoc_name: %s, version: %lu, transaction_id: %hu\n", subdoc_name, (unsigned long)version, trans_id);
 
     	wifi_appenddocPackSize = wifi_pack_appenddoc(wifi_appenddata, &wifi_appenddocdata);
+	//msgpack_print(wifi_appenddocdata, wifi_appenddocPackSize);
     	WebcfgDebug("data packed is %s\n", (char*)wifi_appenddocdata);
  
     	free(wifi_appenddata->subdoc_name);

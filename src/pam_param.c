@@ -80,7 +80,7 @@ tunneldoc_t* tunneldoc_convert(const void *buf, size_t len)
 
 wifi_doc_t* wifi_doc_convert(const void *buf, size_t len)
 {
-	return comp_helper_convert( buf, len, sizeof(tunneldoc_t), "Wifi_SSID_Config", 
+	return comp_helper_convert( buf, len, sizeof(tunneldoc_t), "WifiVapConfig", 
                             MSGPACK_OBJECT_ARRAY, true,
                            (process1_fn_t) process_wifi_doc,
                            (destroy1_fn_t) wifi_doc_destroy );
@@ -416,12 +416,12 @@ int process_pamparams( pparam_t *e, msgpack_object_map *map )
 	{
         	if( MSGPACK_OBJECT_STR == p->val.type )
 		{
-		        if( 0 == match(p, "name") )
+		        if( 0 == match(p, "Name") )
 			{
 		            e->name = strndup( p->val.via.str.ptr, p->val.via.str.size );
 		            objects_left &= ~(1 << 0);
 		        }
-			if( 0 == match(p, "value"))
+			if( 0 == match(p, "Value"))
 			{
 				WebcfgDebug("blob size update\n");
 				e->value = malloc(sizeof(char) * p->val.via.str.size+1 );

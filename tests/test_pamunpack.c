@@ -291,6 +291,7 @@ void test_pam_unpack()
 		memset(packRootData->data_items[0].value, 0, sizeof(char) * len1+1);
 		packRootData->data_items[0].value = memcpy(packRootData->data_items[0].value, tunnelfileData, len1+1);
 		packRootData->data_items[0].value[len1] = '\0';
+		packRootData->data_items[0].value_size = len1;
 		printf("went here2\n");
 		packRootData->data_items[0].type = 12;
 
@@ -299,6 +300,7 @@ void test_pam_unpack()
 		memset(packRootData->data_items[1].value, 0, sizeof(char) * len2+1);
 		packRootData->data_items[1].value = memcpy(packRootData->data_items[1].value, wififileData, len2+1);
 		packRootData->data_items[1].value[len2] = '\0';
+		packRootData->data_items[1].value_size = len2;
 		packRootData->data_items[1].type = 12;
 	}
 
@@ -312,7 +314,7 @@ void test_pam_unpack()
 		printf("blobbuff %s blob len %lu\n", blobbuff, strlen(blobbuff));
 
 	}
-	encodedData =webcfg_appendeddoc( "PublicHotspotData", 52425212, blobbuff, rootPackSize, &doc_transId);
+	encodedData =webcfg_appendeddoc( "hotspot", 52425212, blobbuff, rootPackSize, &doc_transId);
 	pamUnpack(encodedData);
 }
 
@@ -409,7 +411,7 @@ void pamUnpack(char *blob)
 					printf("td entries count is %d\n", td_count);
 					tunneldoc_destroy(td);
 				}
-                                wifi_encoded_data = append_wifi_doc("PublicHotspotData",pd->version,pd->transaction_id,pd->entries[1].value, pd->entries[1].value_size);
+                                wifi_encoded_data = append_wifi_doc(pd->subdoc_name,pd->version,pd->transaction_id,pd->entries[1].value, pd->entries[1].value_size);
 				WebcfgDebug("The encoded Wifi_value is %s\n", wifi_encoded_data);
 				if(wd != NULL)
 				{
