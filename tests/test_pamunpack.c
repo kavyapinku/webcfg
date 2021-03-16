@@ -260,7 +260,7 @@ void test_pam_unpack()
 {
 	int len1,len2=0;
 	data1_t *packRootData = NULL;
-	size_t rootPackSize=-1;
+	size_t rootPackSize, blobPackSize=-1;
 	void *data =NULL;
 
 	char tunneldocfile[64] = "../../tests/tunnel.bin";
@@ -270,6 +270,7 @@ void test_pam_unpack()
 	char *wififileData = NULL;
 	char* blobbuff = NULL; 
 	char * encodedData = NULL;
+	void * rootData = NULL;
 	uint16_t doc_transId = 0;
 
 	readFromFile1(tunneldocfile , &tunnelfileData , &len1);
@@ -305,17 +306,20 @@ void test_pam_unpack()
 	}
 
 	printf("Before here\n");
-	rootPackSize = webcfg_pack_rootdoc( packRootData, &data );
-	printf("rootPackSize is %ld\n", rootPackSize);
+	blobPackSize = webcfg_pack_blob( packRootData, &data );
+	printf("blobPackSize is %ld\n", blobPackSize);
 
-	if(rootPackSize > 0 )
+	if(blobPackSize > 0 )
 	{
 		blobbuff = ( char*)data;
 		printf("blobbuff %s blob len %lu\n", blobbuff, strlen(blobbuff));
+		rootPackSize = webcfg_pack_rootdoc((const char *) blobbuff, &rootData, blobPackSize);
 
 	}
-	encodedData =webcfg_appendeddoc( "hotspot", 52425212, blobbuff, rootPackSize, &doc_transId);
+	
+	encodedData =webcfg_appendeddoc( "hotspot", 52425212, blobbuff, blobPackSize, &doc_transId);
 	pamUnpack(encodedData);
+	writeToDBFile("/tmp/testblob.bin", (char *)rootData, rootPackSize);
 }
 
 void pamUnpack(char *blob)

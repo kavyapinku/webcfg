@@ -21,6 +21,7 @@
 #include "webcfg_helpers.h"
 #include "webcfg_pack.h"
 #include "webcfg_log.h"
+#include "comp_helpers.h"
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
@@ -335,13 +336,86 @@ ssize_t webcfgdb_pack( webconfig_db_data_t *packData, void **data, size_t count 
 }
 
 
-ssize_t webcfg_pack_rootdoc(const data1_t *packData, void **data )
+ssize_t webcfg_pack_rootdoc(const char * blob, void **data, size_t size)
+{
+	size_t rv = -1;
+	msgpack_sbuffer sbuf;
+	msgpack_packer pk;
+	msgpack_sbuffer_init( &sbuf );
+	msgpack_packer_init( &pk, &sbuf, msgpack_sbuffer_write );
+	msgpack_zone mempool;
+        msgpack_object deserialized;
+	int i =0;
+
+	if( blob != NULL )
+	{
+		int count = 1;
+		msgpack_pack_map( &pk, 1);
+		__msgpack_pack_string( &pk, "parameters", strlen("parameters") );
+		msgpack_pack_array( &pk, count );
+
+		for( i = 0; i < count; i++ ) //1 element
+		{
+			msgpack_pack_map( &pk, 3); //name, value, type
+			struct webcfg_token MAP_NAME;
+
+			MAP_NAME.name = "name";
+			MAP_NAME.length = strlen( "name" );
+			printf("The count is %d\n", count);
+			__msgpack_pack_string_nvp( &pk, &MAP_NAME, "Device.GRE.X_RDK_PublicHotspotData" );
+
+			struct webcfg_token MAP_VALUE;
+
+			MAP_VALUE.name = "value";
+			MAP_VALUE.length = strlen( "value" );
+			__msgpack_pack_string_nvp1( &pk, &MAP_VALUE, blob, (int)size);
+
+			struct webcfg_token MAP_DATATYPE;
+
+			MAP_DATATYPE.name = "dataType";
+			MAP_DATATYPE.length = strlen( "dataType" );
+			__msgpack_pack_string( &pk, MAP_DATATYPE.name, MAP_DATATYPE.length);
+			msgpack_pack_uint64(&pk,12);
+		}
+	}
+	else
+	{
+		printf("parameters is NULL\n" );
+		return rv;
+	}
+
+	if( sbuf.data )
+	{
+		*data = ( char * ) malloc( sizeof( char ) * sbuf.size );
+
+		if( NULL != *data )
+		{
+			memcpy( *data, sbuf.data, sbuf.size );
+			//printf("sbuf.data is %s sbuf.size %ld\n", sbuf.data, sbuf.size);
+			rv = sbuf.size;
+			
+		}
+	}
+	 msgpack_zone_init(&mempool, 2048);
+
+    msgpack_unpack(sbuf.data, sbuf.size, NULL, &mempool, &deserialized);
+    msgpack_object_print(stdout, deserialized);
+
+    msgpack_zone_destroy(&mempool);
+
+	msgpack_sbuffer_destroy( &sbuf );
+	return rv;
+}
+
+ssize_t webcfg_pack_blob(const data1_t *packData, void **data )
 {
     size_t rv = -1;
     msgpack_sbuffer sbuf;
     msgpack_packer pk;
     msgpack_sbuffer_init( &sbuf );
     msgpack_packer_init( &pk, &sbuf, msgpack_sbuffer_write );
+    msgpack_zone mempool;
+        msgpack_object deserialized;
     int i =0;
 
     if( packData != NULL && packData->count != 0 ) {
@@ -380,10 +454,18 @@ ssize_t webcfg_pack_rootdoc(const data1_t *packData, void **data )
             memcpy( *data, sbuf.data, sbuf.size );
 	    //printf("sbuf.data is %s sbuf.size %ld\n", sbuf.data, sbuf.size);
             rv = sbuf.size;
+	   // msgpack_print((char*) data, sbuf.size, "/tmp/blobpack.bin");
+		
         }
     }
+	msgpack_zone_init(&mempool, 2048);
 
-    msgpack_sbuffer_destroy( &sbuf );
+    msgpack_unpack(sbuf.data, sbuf.size, NULL, &mempool, &deserialized);
+    msgpack_object_print(stdout, deserialized);
+
+    msgpack_zone_destroy(&mempool);
+
+	msgpack_sbuffer_destroy( &sbuf );
+
     return rv;
 }
-

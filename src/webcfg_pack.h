@@ -47,6 +47,7 @@ typedef struct{
 
 ssize_t webcfgdb_blob_pack(webconfig_db_data_t *webcfgdb, webconfig_tmp_data_t * webcfgtemp, void **data);
 ssize_t webcfgdb_pack( webconfig_db_data_t *packData, void **data, size_t count );
-ssize_t webcfg_pack_rootdoc( const data1_t *packData, void **data );
+ssize_t webcfg_pack_rootdoc(const char * blob, void **data, size_t size);
+ssize_t webcfg_pack_blob(const data1_t *packData, void **data );
 
 #endif

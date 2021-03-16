@@ -78,5 +78,5 @@ size_t appendWifiEncodedData( void **appendData, void *encodedBuffer, size_t enc
 
 char * append_wifi_doc(char * subdoc_name, uint32_t version, uint16_t trans_id, char * blob_data, size_t blob_size);
 
-void msgpack_print(const void *data, size_t len);
+void msgpack_print(const void *data, size_t len, char * filename);
 #endif

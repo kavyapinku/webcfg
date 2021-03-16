@@ -345,7 +345,7 @@ size_t appendWifiEncodedData( void **appendData, void *encodedBuffer, size_t enc
     return -1;
 }
 
-	char * append_wifi_doc(char * subdoc_name, uint32_t version, uint16_t trans_id, char * blob_data, size_t blob_size)
+char * append_wifi_doc(char * subdoc_name, uint32_t version, uint16_t trans_id, char * blob_data, size_t blob_size)
 {
     wifi_appenddoc_t *wifi_appenddata = NULL;
     size_t wifi_appenddocPackSize = -1;
@@ -375,7 +375,7 @@ size_t appendWifiEncodedData( void **appendData, void *encodedBuffer, size_t enc
     	WebcfgInfo("wifi_appenddocPackSize: %zu, blobSize: %zu, wifi_embeddeddocPackSize: %zu\n", wifi_appenddocPackSize, blob_size, wifi_embeddeddocPackSize);
     	WebcfgDebug("The wifi_embedded doc data is %s\n",(char*)wifi_embeddeddocdata);
 	free(wifi_appenddocdata);
-	msgpack_print(wifi_embeddeddocdata, wifi_embeddeddocPackSize);
+	//msgpack_print(wifi_embeddeddocdata, wifi_embeddeddocPackSize);
         WebcfgDebug("\n");
    	wifi_finaldocdata = base64wifiblobencoder((char *)wifi_embeddeddocdata, wifi_embeddeddocPackSize);
     	WebcfgDebug("The wifi_encoded append doc is %s\n",wifi_finaldocdata);
@@ -385,12 +385,12 @@ size_t appendWifiEncodedData( void **appendData, void *encodedBuffer, size_t enc
     return wifi_finaldocdata;
 }
 
-void msgpack_print(const void *data, size_t len)
+void msgpack_print(const void *data, size_t len, char* filename)
 {
       if( NULL != data && 0 < len )
       {
           size_t offset = 0;
-          FILE *fd = fopen("../../tests/output.bin", "w+");
+          FILE *fd = fopen(filename, "w+");
           msgpack_unpacked msg;
           msgpack_unpack_return msgpk_rv;
           msgpack_unpacked_init( &msg );

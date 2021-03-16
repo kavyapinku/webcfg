@@ -27,7 +27,7 @@
 #define MAX_BUF_SIZE	           256
 #define MAX_PARAMETERNAME_LENGTH       512
 #define BACKOFF_SLEEP_DELAY_SEC 	    10
-
+#define MULTIPART_UTILITY 1
 #ifdef BUILD_YOCTO
 #define DEVICE_PROPS_FILE       "/etc/device.properties"
 #else

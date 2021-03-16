@@ -175,11 +175,11 @@ void test_multipart()
 		return;
 	}
 
-	initWebcfgProperties(WEBCFG_PROPERTIES_FILE);
-	initWebConfigNotifyTask();
-	processWebcfgEvents();
-	initEventHandlingTask();
-	initWebConfigClient();
+	//initWebcfgProperties(WEBCFG_PROPERTIES_FILE);
+	//initWebConfigNotifyTask();
+	//processWebcfgEvents();
+	//initEventHandlingTask();
+	//initWebConfigClient();
 	set_global_supplementarySync(0);
 	printTest();
 	processWebconfgSync((int)status, NULL);
