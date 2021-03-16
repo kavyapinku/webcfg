@@ -142,6 +142,7 @@ int process_params( wparam_t *e, msgpack_object_map *map )
             } else if( MSGPACK_OBJECT_STR == p->val.type ) {
                 if( 0 == match(p, "name") ) {
                     e->name = strndup( p->val.via.str.ptr, p->val.via.str.size );
+			printf("the e->name is %s\n", e->name);
                     objects_left &= ~(1 << 1);
                 }
 		if( 0 == match(p, "value") ) {
@@ -195,5 +196,6 @@ int process_webcfgparam( webcfgparam_t *pm, msgpack_object *obj )
         }
     }
 
+	printf("Process param is success\n");
     return 0;
 }

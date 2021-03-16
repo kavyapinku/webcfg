@@ -259,6 +259,7 @@ char * base64encoder1(char * blob_data, size_t blob_size )
 void test_pam_unpack()
 {
 	int len1,len2=0;
+	webcfgparam_t *wp = NULL;
 	data1_t *packRootData = NULL;
 	size_t rootPackSize, blobPackSize=-1;
 	void *data =NULL;
@@ -316,7 +317,13 @@ void test_pam_unpack()
 		rootPackSize = webcfg_pack_rootdoc((const char *) blobbuff, &rootData, blobPackSize);
 
 	}
-	
+	wp = webcfgparam_convert(rootData, rootPackSize);
+
+	printf("wp is %p\n", wp);
+
+	printf("wp->entries[0].name is %s\n", wp->entries[0].name);
+	printf("wp->entries[0].value is %s\n", wp->entries[0].value);
+	printf("wp->entries[0].value_size %d\n", wp->entries[0].value_size);
 	encodedData =webcfg_appendeddoc( "hotspot", 52425212, blobbuff, blobPackSize, &doc_transId);
 	pamUnpack(encodedData);
 	writeToDBFile("/tmp/testblob.bin", (char *)rootData, rootPackSize);

@@ -391,7 +391,7 @@ ssize_t webcfg_pack_rootdoc(const char * blob, void **data, size_t size)
 		if( NULL != *data )
 		{
 			memcpy( *data, sbuf.data, sbuf.size );
-			//printf("sbuf.data is %s sbuf.size %ld\n", sbuf.data, sbuf.size);
+			printf("sbuf.data is %s sbuf.size %zu\n", sbuf.data, sbuf.size);
 			rv = sbuf.size;
 			
 		}
@@ -452,7 +452,7 @@ ssize_t webcfg_pack_blob(const data1_t *packData, void **data )
 
         if( NULL != *data ) {
             memcpy( *data, sbuf.data, sbuf.size );
-	    //printf("sbuf.data is %s sbuf.size %ld\n", sbuf.data, sbuf.size);
+	    printf("sbuf.data is %s sbuf.size %zu\n", sbuf.data, sbuf.size);
             rv = sbuf.size;
 	   // msgpack_print((char*) data, sbuf.size, "/tmp/blobpack.bin");
 		

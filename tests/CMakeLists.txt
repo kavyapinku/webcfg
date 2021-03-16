@@ -106,6 +106,15 @@ target_link_libraries (test_pamunpack -lcunit -lmsgpackc -lcurl -lpthread  -lm -
 
 target_link_libraries (test_pamunpack gcov -Wl,--no-as-needed )
 
+#-------------------------------------------------------------------------------
+#   test_multipartutility
+#-------------------------------------------------------------------------------
+add_test(NAME test_multipartutility COMMAND ${MEMORY_CHECK} ./test_multipartutility)
+add_executable(test_multipartutility test_multipartutility.c)
+target_link_libraries (test_multipartutility -lcunit -lmsgpackc -lcurl -lpthread  -lm -luuid -ltrower-base64 -lwdmp-c -lcimplog -lcjson -lwrp-c -llibparodus -lnanomsg)
+
+target_link_libraries (test_multipartutility gcov -Wl,--no-as-needed )
+
 # Code coverage
 
 add_custom_target(coverage
