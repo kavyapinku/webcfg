@@ -354,6 +354,7 @@ int handlehttpResponse(long response_code, char *webConfigData, int retry_count,
 		{
 			WebcfgDebug("webConfigData fetched successfully\n");
 			WebcfgDebug("parseMultipartDocument\n");
+			writeToDBFile("/tmp/webConfigData.bin",(char *)webConfigData,dataSize);
 			msgpack_status = parseMultipartDocument(webConfigData, ct, dataSize, transaction_uuid);
 
 			if(msgpack_status == WEBCFG_SUCCESS)
