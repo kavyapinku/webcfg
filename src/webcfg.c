@@ -481,6 +481,7 @@ int handlehttpResponse(long response_code, char *webConfigData, int retry_count,
 		{
 			WebcfgDebug("webConfigData fetched successfully\n");
 			WebcfgDebug("parseMultipartDocument\n");
+			writeToDBFile("/tmp/webConfigData.bin",(char *)webConfigData,dataSize);
 			msgpack_status = parseMultipartDocument(webConfigData, ct, dataSize, transaction_uuid);
 
 			if(msgpack_status == WEBCFG_SUCCESS)
@@ -603,7 +604,7 @@ long timeVal_Diff(struct timespec *starttime, struct timespec *finishtime)
 int testUtility()
 {
 	char *data = NULL;
-	char command[30] = {0};
+	//char command[30] = {0};
 	int test_dataSize = 0;
 	int test_file_status = 0;
 
@@ -659,7 +660,7 @@ int testUtility()
 			WEBCFG_FREE(transaction_uuid);
 			WebcfgError("webConfigData is empty, need to retry\n");
 		}
-		sprintf(command,"rm -rf %s",TEST_FILE_LOCATION);
+		/*sprintf(command,"rm -rf %s",TEST_FILE_LOCATION);
 		if(-1 != system(command))
 		{
 			WebcfgInfo("The %s file is removed successfully\n",TEST_FILE_LOCATION);
@@ -667,7 +668,7 @@ int testUtility()
 		else
 		{
 			WebcfgError("Error in removing %s file\n",TEST_FILE_LOCATION);
-		}
+		}*/
 		return 1;
 	}
 	else
