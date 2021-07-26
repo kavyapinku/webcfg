@@ -60,6 +60,7 @@ pthread_cond_t sync_condition=PTHREAD_COND_INITIALIZER;
 bool g_shutdown  = false;
 bool bootSyncInProgress = false;
 pthread_t* g_mpthreadId;
+static int contentTypeFlag = 0;
 #ifdef MULTIPART_UTILITY
 static int g_testfile = 0;
 #endif
@@ -523,6 +524,17 @@ int handlehttpResponse(long response_code, char *webConfigData, int retry_count,
 			WebcfgInfo("webConfigData is empty\n");
 			//After factory reset when server sends 200 with empty config, set POST-NONE root version
 			contentLength = get_global_contentLen();
+			if(contentTypeFlag == 0)
+			{
+				if((contentLength !=NULL) && (strcmp(contentLength, "0") == 0))
+				{
+					refreshConfigVersionList(version, response_code);
+					WEBCFG_FREE(contentLength);
+					set_global_contentLen(NULL);
+					WEBCFG_FREE(transaction_uuid);
+					WEBCFG_FREE(webConfigData);
+				}
+			}
 			if((contentLength !=NULL) && (strcmp(contentLength, "0") == 0))
 			{
 				WebcfgInfo("webConfigData content length is 0\n");
@@ -544,6 +556,7 @@ int handlehttpResponse(long response_code, char *webConfigData, int retry_count,
 					WEBCFG_FREE(db_root_string);
 				}
 				WEBCFG_FREE(result);
+				contentTypeFlag++;
 			}
 		}
 	}
