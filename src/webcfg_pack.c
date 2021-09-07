@@ -51,6 +51,7 @@ struct webcfg_token {
 /*----------------------------------------------------------------------------*/
 /*                             Internal functions                             */
 /*----------------------------------------------------------------------------*/
+int testwrite(char *file_path, char *data, size_t size);
 static const struct webcfg_token WEBCFG_DB_PARAMETERS   = { .name = "webcfgdb", .length = sizeof( "webcfgdb" ) - 1 };
 static const struct webcfg_token WEBCFG_BLOB_PARAMETERS   = { .name = "webcfgblob", .length = sizeof( "webcfgblob" ) - 1 };
 static void __msgpack_pack_string( msgpack_packer *pk, const void *string, size_t n );
@@ -260,7 +261,7 @@ ssize_t webcfgdb_pack( webconfig_db_data_t *packData, void **data, size_t count 
         __msgpack_pack_string( &pk, WEBCFG_DB_PARAMETERS.name, WEBCFG_DB_PARAMETERS.length );
 	msgpack_pack_array( &pk, count );
         
-	WebcfgDebug("The pack count is %zu\n",count);
+	WebcfgInfo("The pack count is %zu\n",count);
     
     webconfig_db_data_t *temp = packData;
 
@@ -279,6 +280,7 @@ ssize_t webcfgdb_pack( webconfig_db_data_t *packData, void **data, size_t count 
 
             WEBCFG_MAP_NAME.name = "name";
             WEBCFG_MAP_NAME.length = strlen( "name" );
+            WebcfgInfo("The subdoc name is %s\n",temp->name);
             __msgpack_pack_string_nvp( &pk, &WEBCFG_MAP_NAME, temp->name );
 
 	    struct webcfg_token WEBCFG_MAP_VERSION;
@@ -286,7 +288,7 @@ ssize_t webcfgdb_pack( webconfig_db_data_t *packData, void **data, size_t count 
             WEBCFG_MAP_VERSION.name = "version";
             WEBCFG_MAP_VERSION.length = strlen( "version" );
 	    __msgpack_pack_string( &pk, WEBCFG_MAP_VERSION.name, WEBCFG_MAP_VERSION.length);
-            //WebcfgDebug("The version is %ld\n",(long)temp->version);
+            WebcfgInfo("The version is %ld\n",(long)temp->version);
             msgpack_pack_uint64(&pk,(uint32_t) temp->version);
 
 	    if(temp->root_string !=NULL)
@@ -295,6 +297,7 @@ ssize_t webcfgdb_pack( webconfig_db_data_t *packData, void **data, size_t count 
 
             WEBCFG_MAP_ROOTSTRING.name = "root_string";
             WEBCFG_MAP_ROOTSTRING.length = strlen( "root_string" );
+            WebcfgInfo("The root_string is %s\n",temp->root_string);
             __msgpack_pack_string_nvp( &pk, &WEBCFG_MAP_ROOTSTRING, temp->root_string );
             }
             temp = temp->next;
@@ -311,7 +314,8 @@ ssize_t webcfgdb_pack( webconfig_db_data_t *packData, void **data, size_t count 
 
         if( NULL != *data ) {
             memcpy( *data, sbuf.data, sbuf.size );
-	    //WebcfgDebug("sbuf.data is %s sbuf.size %ld\n", sbuf.data, sbuf.size);
+	    WebcfgInfo("sbuf.data is %s sbuf.size %ld\n", sbuf.data, sbuf.size);
+            testwrite("/tmp/data.bin", sbuf.data, sbuf.size);
             rv = sbuf.size;
         }
     }
@@ -320,6 +324,27 @@ ssize_t webcfgdb_pack( webconfig_db_data_t *packData, void **data, size_t count 
     return rv;
 }
 
-
+int testwrite(char *file_path, char *data, size_t size)
+{
+	FILE *fp;
+	fp = fopen(file_path , "w+");
+	if (fp == NULL)
+	{
+		WebcfgError("Failed to open file in db %s\n", file_path );
+		return 0;
+	}
+	if(data !=NULL)
+	{
+		fwrite(data, size, 1, fp);
+		fclose(fp);
+		return 1;
+	}
+	else
+	{
+		WebcfgError("WriteToJson failed, Data is NULL\n");
+		fclose(fp);
+		return 0;
+	}
+}
 
 

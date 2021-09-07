@@ -811,9 +811,9 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 							//No root update for supplementary sync
 							if(!get_global_supplementarySync() && (ccspStatus == 204 && subdocStatus != WEBCFG_SUCCESS) && (checkRootUpdate() == WEBCFG_SUCCESS))
 							{
-								WebcfgDebug("updateRootVersionToDB\n");
+								WebcfgInfo("updateRootVersionToDB\n");
 								updateRootVersionToDB();
-								WebcfgDebug("check deleteRootAndMultipartDocs\n");
+								WebcfgInfo("check deleteRootAndMultipartDocs\n");
 								deleteRootAndMultipartDocs();
 								addNewDocEntry(get_successDocCount());
 								if(NULL != reqParam)
@@ -1374,9 +1374,9 @@ void refreshConfigVersionList(char *versionsList, int http_status)
 	snprintf(versionsList, 512, "%s", "0");
 
 	derive_root_doc_version_string(&root_str, &root_version, http_status);
-	WebcfgDebug("update root_version %lu rootString %s to DB\n", (long)root_version, root_str);
+	WebcfgInfo("update root_version %lu rootString %s to DB\n", (long)root_version, root_str);
 	checkDBList("root", root_version, root_str);
-	WebcfgDebug("addNewDocEntry. get_successDocCount %d\n", get_successDocCount());
+	WebcfgInfo("addNewDocEntry. get_successDocCount %d\n", get_successDocCount());
 	addNewDocEntry(get_successDocCount());
 
 	webconfig_db_data_t *temp = NULL;

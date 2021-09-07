@@ -83,7 +83,7 @@ WEBCFG_STATUS initDB(char * db_file_path )
      int ch_count=0;
      webconfig_db_data_t* dm = NULL;
 
-     WebcfgDebug("DB file path is %s\n", db_file_path);
+     WebcfgInfo("DB file path is %s\n", db_file_path);
      fp = fopen(db_file_path,"rb");
 
      if (fp == NULL)
@@ -118,8 +118,11 @@ WEBCFG_STATUS initDB(char * db_file_path )
 		return WEBCFG_FAILURE;
 	}
      len = ch_count;
+     WebcfgInfo("The ch_count is %d\n", ch_count);
      fclose(fp);
 
+     WebcfgInfo("The data is %s\n", data);
+     writeToDBFile("/tmp/test.bin", data, len);
      dm = decodeData((void *)data, len);
      if(NULL == dm)
      {
@@ -128,6 +131,8 @@ WEBCFG_STATUS initDB(char * db_file_path )
      }
      else
      {
+         WebcfgInfo("Inside the destroy\n");
+	reset_successDocCount();
          webcfgdb_destroy (dm );
      }
      WEBCFG_FREE(data);
@@ -142,10 +147,10 @@ WEBCFG_STATUS addNewDocEntry(size_t count)
      size_t webcfgdbPackSize = -1;
      void* data = NULL;
  
-     WebcfgDebug("DB docs count %ld\n", (size_t)count);
+     WebcfgInfo("DB docs count %ld\n", (size_t)count);
      webcfgdbPackSize = webcfgdb_pack(webcfgdb_data, &data, count);
-     WebcfgDebug("size of webcfgdbPackSize %ld\n", webcfgdbPackSize);
-     WebcfgDebug("writeToDBFile %s\n", WEBCFG_DB_FILE);
+     WebcfgInfo("size of webcfgdbPackSize %ld\n", webcfgdbPackSize);
+     WebcfgInfo("writeToDBFile %s\n", WEBCFG_DB_FILE);
      writeToDBFile(WEBCFG_DB_FILE,(char *)data,webcfgdbPackSize);
      if(data)
      {
@@ -535,6 +540,8 @@ void checkDBList(char *docname, uint32_t version, char* rootstr)
 			}
 			webcfgdb->next = NULL;
 
+			WebcfgInfo("The subdoc name is webcfgdb->name %s\n", webcfgdb->name);
+			WebcfgInfo("The subdoc version is webcfgdb->version %lu\n", (long)webcfgdb->version);
 			addToDBList(webcfgdb);
 			if(webcfgdb->root_string !=NULL)
 			{
@@ -878,6 +885,7 @@ void addToDBList(webconfig_db_data_t *webcfgdb)
       {
           webcfgdb_data = webcfgdb;
 	  pthread_mutex_unlock (&webconfig_db_mut);
+          WebcfgInfo("The success_doc_count is %d\n", success_doc_count);
           success_doc_count++;
 	  WebcfgInfo("Producer added webcfgdb->name %s, webcfg->version %lu, success_doc_count %d\n",webcfgdb->name, (long)webcfgdb->version, success_doc_count);
       }
