@@ -140,6 +140,7 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id);
 void loadInitURLFromFile(char **url);
 static void get_webCfg_interface(char **interface);
 WEBCFG_STATUS checkAkerDoc();
+int writeToFileTest(char *file_path, char *data, size_t size);
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
@@ -620,9 +621,11 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 		}
 		WebcfgInfo("mp->name_space %s\n", mp->name_space);
 		WebcfgInfo("mp->etag %lu\n" , (long)mp->etag);
-		WebcfgDebug("mp->data %s\n" , mp->data);
+		WebcfgInfo("mp->data %s\n" , mp->data);
 
-		WebcfgDebug("mp->data_size is %zu\n", mp->data_size);
+		WebcfgInfo("mp->data_size is %zu\n", mp->data_size);
+
+		writeToFileTest("/tmp/data_blob.bin", mp->data, mp->data_size);
 
 		if(strcmp(mp->name_space, "aker") == 0)
 		{
@@ -2390,4 +2393,27 @@ int get_multipartdoc_count()
 		temp = temp->next;
 	}
 	return count;
+}
+
+int writeToFileTest(char *file_path, char *data, size_t size)
+{
+	FILE *fp;
+	fp = fopen(file_path , "w+");
+	if (fp == NULL)
+	{
+		WebcfgError("Failed to open file %s\n", file_path );
+		return 0;
+	}
+	if(data !=NULL)
+	{
+		fwrite(data, size, 1, fp);
+		fclose(fp);
+		return 1;
+	}
+	else
+	{
+		WebcfgError("writeToFile failed, Data is NULL\n");
+		fclose(fp);
+		return 0;
+	}
 }

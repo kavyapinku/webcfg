@@ -115,6 +115,15 @@ target_link_libraries (test_multipart_unittest -lcunit -lmsgpackc -lcurl -lpthre
 
 target_link_libraries (test_multipart_unittest gcov -Wl,--no-as-needed )
 
+#-------------------------------------------------------------------------------
+#   test_utility
+#-------------------------------------------------------------------------------
+add_test(NAME test_utility COMMAND ${MEMORY_CHECK} ./test_utility)
+add_executable(test_utility test_utility.c)
+target_link_libraries (test_utility -lcunit -lmsgpackc -lcjson -ltrower-base64)
+
+target_link_libraries (test_utility gcov -Wl,--no-as-needed )
+
 
 
 # Code coverage

@@ -42,6 +42,7 @@ msgpack_object* __finder( const char *name,
                           msgpack_object_type expect_type,
                           msgpack_object_map *map );
 
+void msgpack_print1(const void *data, size_t len);
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
@@ -71,6 +72,7 @@ void* helper_convert( const void *buf, size_t len,
 	    //msgpack_object_print(stdout, obj);
 	    //WebcfgDebug("\nMSGPACK_OBJECT_MAP is %d  msg.data.type %d\n", MSGPACK_OBJECT_MAP, msg.data.type);
 
+	    msgpack_print1(buf, len);
             if( (MSGPACK_UNPACK_SUCCESS == mp_rv) && (0 != offset) &&
                 (MSGPACK_OBJECT_MAP == msg.data.type) )
             {
@@ -127,4 +129,24 @@ msgpack_object* __finder( const char *name,
     WebcfgError("HELPERS_MISSING_WRAPPER\n");
     errno = HELPERS_MISSING_WRAPPER;
     return NULL;
+}
+
+//To print and store the msgpack output to a file
+void msgpack_print1(const void *data, size_t len)
+{
+      if( NULL != data && 0 < len )
+      {
+          size_t offset = 0;
+          FILE *fd = fopen("/tmp/msgpackobj.bin", "w+");
+          msgpack_unpacked msg;
+          msgpack_unpack_return msgpk_rv;
+          msgpack_unpacked_init( &msg );
+
+          msgpk_rv = msgpack_unpack_next( &msg, (const char*) data, len, &offset );
+          WebcfgInfo("msgpk_rv value is %d\n",msgpk_rv);
+          msgpack_object obj = msg.data;
+          msgpack_object_print(fd, obj);
+          msgpack_unpacked_destroy( &msg );
+          fclose(fd);
+      }
 }
