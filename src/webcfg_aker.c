@@ -56,6 +56,7 @@ char *aker_status = NULL;
 bool send_aker_flag = false;
 pthread_mutex_t client_mut=PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t client_con=PTHREAD_COND_INITIALIZER;
+static int akerTestFlag = 0;
 /*----------------------------------------------------------------------------*/
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
@@ -286,6 +287,11 @@ AKER_STATUS processAkerSubdoc(webconfig_tmp_data_t *docNode, multipartdocs_t *ak
 
 	gmp = akerIndex;
 
+	if(akerTestFlag == 0)
+	{
+		akerTestFlag++;
+	}
+
 	if(gmp ==NULL)
 	{
 		WebcfgError("processAkerSubdoc failed as mp cache is NULL\n");
@@ -378,6 +384,8 @@ AKER_STATUS processAkerSubdoc(webconfig_tmp_data_t *docNode, multipartdocs_t *ak
 			if(reqParam !=NULL && validate_request_param(reqParam, paramCount) == WEBCFG_SUCCESS)
 			{
 				ret = send_aker_blob(pm->entries[0].name, pm->entries[0].value,pm->entries[0].value_size, doc_transId, (int)gmp->etag);
+
+				ret = WDMP_FAILURE;
 
 				if(ret == WDMP_SUCCESS)
 				{
@@ -512,7 +520,7 @@ static char *decodePayload(char *payload)
 	msgpack_unpack_return ret;
 	msgpack_unpacked_init(&result);
 	ret = msgpack_unpack_next(&result, payload, strlen(payload), &off);
-	if(ret == MSGPACK_UNPACK_SUCCESS)
+	if(ret == MSGPACK_UNPACK_SUCCESS && akerTestFlag >1)
 	{
 		msgpack_object obj = result.data;
 		//msgpack_object_print(stdout, obj);
@@ -549,6 +557,7 @@ static char *decodePayload(char *payload)
 		}
 		WEBCFG_FREE(errmsg);
 	}
+	akerTestFlag++;
 	msgpack_unpacked_destroy(&result);
 	return decodedPayload;
 }
@@ -597,6 +606,8 @@ static void handleAkerStatus(int status, char *payload)
 	uint16_t err = 0;
 	char* result = NULL;
 	webconfig_tmp_data_t * docNode = NULL;
+
+	status = 0;
 
 	switch(status)
 	{
