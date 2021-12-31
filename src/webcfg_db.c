@@ -63,6 +63,7 @@ pthread_mutex_t webconfig_tmp_data_mut=PTHREAD_MUTEX_INITIALIZER;
 static int numOfMpDocs = 0;
 static int success_doc_count = 0;
 static int doc_fail_flag = 0;
+static int root_change = 0; //To check root version DB write required or not
 /*----------------------------------------------------------------------------*/
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
@@ -408,6 +409,18 @@ void set_doc_fail( int value)
     doc_fail_flag = value;
 }
 
+int get_root_change()
+{
+    WebcfgInfo("root_change is %d\n", root_change);
+    return root_change;
+}
+
+void reset_root_change()
+{
+    root_change = 0;
+    WebcfgInfo("root_change value is reset\n");
+}
+
 blob_t * get_DB_BLOB()
 {
      WebcfgDebug("Proceed to generateBlob\n");
@@ -590,23 +603,42 @@ WEBCFG_STATUS updateDBlist(char *docname, uint32_t version, char* rootstr)
 	{
 		pthread_mutex_lock (&webconfig_db_mut);
 		WebcfgDebug("mutex_lock in updateDBlist\n");
-		WebcfgDebug("node is pointing to webcfgdb->name %s, docname %s, dblen %zu, doclen %zu webcfgdb->root_string %s\n",webcfgdb->name, docname, strlen(webcfgdb->name), strlen(docname), webcfgdb->root_string);
+		WebcfgInfo("node is pointing to webcfgdb->name %s, docname %s, dblen %zu, doclen %zu webcfgdb->root_string %s\n",webcfgdb->name, docname, strlen(webcfgdb->name), strlen(docname), webcfgdb->root_string);
 		if( strcmp(docname, webcfgdb->name) == 0)
 		{
-			webcfgdb->version = version;
 			if( strcmp("root", webcfgdb->name) == 0)
 			{
 				if(webcfgdb->root_string !=NULL)
 				{
+					if((webcfgdb->version == version) && (strcmp(webcfgdb->root_string, rootstr) == 0))
+					{
+						root_change = 0;
+						pthread_mutex_unlock (&webconfig_db_mut);
+						WebcfgInfo("mutex_unlock since no root change required\n");
+						return WEBCFG_SUCCESS;
+					}
+
 					WEBCFG_FREE(webcfgdb->root_string);
 					webcfgdb->root_string = NULL;
 				}
+
 				if(rootstr!=NULL)
 				{
 					webcfgdb->root_string = strdup(rootstr);
+					root_change = 1;
+					WebcfgInfo("Root string is different so db write is required");
 				}
+
+				if(webcfgdb->version != version)
+				{
+					root_change = 1;
+					WebcfgInfo("Root Version is different so db write is required");
+				}
+
 			}
-			WebcfgDebug("webcfgdb %s is updated to version %lu webcfgdb->root_string %s\n", docname, (long)webcfgdb->version, webcfgdb->root_string);
+
+			webcfgdb->version = version;
+			WebcfgInfo("webcfgdb %s is updated to version %lu webcfgdb->root_string %s with root_string %s\n", docname, (long)webcfgdb->version, webcfgdb->root_string, rootstr);
 			pthread_mutex_unlock (&webconfig_db_mut);
 			WebcfgDebug("mutex_unlock if docname is webcfgdb name\n");
 			return WEBCFG_SUCCESS;
