@@ -1438,6 +1438,7 @@ void refreshConfigVersionList(char *versionsList, int http_status)
 
 	derive_root_doc_version_string(&root_str, &root_version, http_status);
 	WebcfgDebug("update root_version %lu rootString %s to DB\n", (long)root_version, root_str);
+	reset_root_change(); //To avoid the preset of flag by any other function using updateDBList function
 	checkDBList("root", root_version, root_str);
 	if(get_root_change())
 	{
