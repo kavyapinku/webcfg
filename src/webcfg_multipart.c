@@ -975,9 +975,15 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 				updateTmpList(subdoc_node, akerIndex->name_space, akerIndex->etag, "pending", "aker_service_unavailable", 0, 0, 0);
 				if(backoffRetryTime >= max_retry_sleep)
 				{
+				//#if defined(_HUB4_PRODUCT_REQ_)
+					backoffRetryTime = 0;
+					c = 4;
+					WebcfgInfo("Aker Service is unavailable so still retrying\n");
+			/*	#else
 					WebcfgError("aker doc max retry reached\n");
 					updateAkerMaxRetry(subdoc_node, "aker");
 					break;
+				#endif */
 				}
 
 				if(backoffRetryTime < max_retry_sleep)
