@@ -1015,17 +1015,17 @@ void setValues_rbus(const param_t paramVal[], const unsigned int paramCount, con
 		return;
 	}
 
-	WebcfgDebug("setValues_rbus setType %d\n", setType);
-	WebcfgDebug("setValues_rbus transactionId %s\n",transactionId);
-	WebcfgDebug("setValues_rbus timeSpan %p\n",timeSpan);
+	WebcfgInfo("setValues_rbus setType %d\n", setType);
+	WebcfgInfo("setValues_rbus transactionId %s\n",transactionId);
+	WebcfgInfo("setValues_rbus timeSpan %p\n",timeSpan);
 
 	for(cnt=0; cnt<paramCount; cnt++)
 	{
 		rbusValue_Init(&setVal[cnt]);
 
 		setNames[cnt] = paramVal[cnt].name;
-		WebcfgDebug("paramName to be set is %s paramCount %d\n", paramVal[cnt].name, paramCount);
-		WebcfgDebug("paramVal is %s\n", paramVal[cnt].value);
+		WebcfgInfo("paramName to be set is %s paramCount %d\n", paramVal[cnt].name, paramCount);
+		WebcfgInfo("paramVal is %s\n", paramVal[cnt].value);
 
 		rbusValueType_t type = mapWdmpToRbusDataType(paramVal[cnt].type);
 
@@ -1041,8 +1041,8 @@ void setValues_rbus(const param_t paramVal[], const unsigned int paramCount, con
 		rbusProperty_t next;
 		rbusProperty_Init(&next, setNames[cnt], setVal[cnt]);
 
-		WebcfgDebug("Property Name[%d] is %s\n", cnt, rbusProperty_GetName(next));
-		WebcfgDebug("Value type[%d] is %d\n", cnt, rbusValue_GetType(setVal[cnt]));
+		WebcfgInfo("Property Name[%d] is %s\n", cnt, rbusProperty_GetName(next));
+		WebcfgInfo("Value type[%d] is %d\n", cnt, rbusValue_GetType(setVal[cnt]));
 
 		if(properties == NULL)
 		{

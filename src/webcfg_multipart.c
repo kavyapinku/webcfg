@@ -684,7 +684,8 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
                                 {
 					if(pm->entries[i].type == WDMP_BLOB)
 					{
-						char *appended_doc = NULL;	
+						char *appended_doc = NULL;
+						WebcfgInfo("The name is %s and size is %d\n", mp->name_space, pm->entries[i].value_size);
 						appended_doc = webcfg_appendeddoc( mp->name_space, mp->etag, pm->entries[i].value, pm->entries[i].value_size, &doc_transId, &sendMsgSize);
 						if(appended_doc != NULL)
 						{
@@ -741,8 +742,8 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 					}
                                 }
 				WebcfgInfo("Request:> param[%d].name = %s, type = %d\n",i,reqParam[i].name,reqParam[i].type);
-				WebcfgDebug("Request:> param[%d].value = %s\n",i,reqParam[i].value);
-				WebcfgDebug("Request:> param[%d].type = %d\n",i,reqParam[i].type);
+				WebcfgInfo("Request:> param[%d].value = %s\n",i,reqParam[i].value);
+				WebcfgInfo("Request:> param[%d].type = %d\n",i,reqParam[i].type);
 			}
 
 			if(reqParam !=NULL && validate_request_param(reqParam, paramCount) == WEBCFG_SUCCESS)
