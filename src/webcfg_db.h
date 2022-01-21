@@ -151,7 +151,7 @@ void set_doc_fail( int value);
 
 char * get_DB_BLOB_base64();
 
-void checkDBList(char *docname, uint32_t version,char *rootstr);
+WEBCFG_STATUS checkDBList(char *docname, uint32_t version,char *rootstr);
 
 WEBCFG_STATUS updateDBlist(char *docname, uint32_t version,char *rootstr);
 
@@ -163,6 +163,7 @@ int writebase64ToDBFile(char *base64_file_path, char *data);
 
 char * base64blobencoder(char * blob_data, size_t blob_size );
 
+void printDB();
 /**
  *  This function converts a msgpack buffer into an webconfig_db_t structure
  *  if possible.
