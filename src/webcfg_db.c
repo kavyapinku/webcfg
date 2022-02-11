@@ -629,6 +629,16 @@ WEBCFG_STATUS updateDBlist(char *docname, uint32_t version, char* rootstr)
 					WEBCFG_FREE(webcfgdb->root_string);
 					webcfgdb->root_string = NULL;
 				}
+				else //To avoid db write due to NULL in webcfgdb->root_string in above condition
+				{
+					WebcfgInfo("webcfgdb->root_string is NULL\n");
+					if((webcfgdb->version == version) && (rootstr == NULL))
+					{
+						pthread_mutex_unlock (&webconfig_db_mut);
+						WebcfgInfo("mutex_unlock since no root change required\n");
+						return WEBCFG_NO_CHANGE;
+					}
+				}
 
 				if(rootstr!=NULL)
 				{
