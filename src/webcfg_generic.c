@@ -31,11 +31,17 @@
 /*----------------------------------------------------------------------------*/
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
+
+char *global_systemReadyTime = NULL;
+
 #ifndef WEBCONFIG_BIN_SUPPORT
 char *__attribute__((weak)) getDeviceBootTime(void);
 char *__attribute__((weak)) getSerialNumber(void);
 char *__attribute__((weak)) getProductClass(void);
 char *__attribute__((weak)) getModelName(void);
+#ifdef WAN_FAILOVER_SUPPORTED
+char *__attribute__((weak)) getInterfaceName(void);
+#endif
 char *__attribute__((weak)) getPartnerID(void);
 char *__attribute__((weak)) getAccountID(void);
 char *__attribute__((weak)) getRebootReason(void);
@@ -90,6 +96,13 @@ char *getModelName(void)
     return NULL;
 }
 
+#ifdef WAN_FAILOVER_SUPPORTED
+char *getInterfaceName(void)
+{
+    return NULL;
+}
+#endif
+
 char *getPartnerID(void)
 {
     return NULL;
@@ -132,7 +145,17 @@ char *getFirmwareUpgradeEndTime(void)
 
 char *get_global_systemReadyTime(void)
 {
-    return NULL;
+    return global_systemReadyTime;
+}
+
+void set_global_systemReadyTime(char* systemReadyTime)
+{
+    if(global_systemReadyTime != NULL)
+    {
+	free(global_systemReadyTime);
+	global_systemReadyTime = NULL;
+    }
+    global_systemReadyTime = strdup(systemReadyTime);
 }
 
 int setForceSync(char* pString, char *transactionId,int *session_status)

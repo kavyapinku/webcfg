@@ -46,6 +46,8 @@ int main()
 	char* strValue = NULL;
 	int ret = 0;
 	int systemStatus = -1;
+    	struct timespec cTime;
+    	char systemReadyTime[32]={'\0'};
 #ifdef INCLUDE_BREAKPAD
     breakpad_ExceptionHandler();
 #else
@@ -73,8 +75,15 @@ int main()
 		regWebConfigDataModel();
 		systemStatus = rbus_waitUntilSystemReady();
 		WebcfgDebug("rbus_waitUntilSystemReady systemStatus is %d\n", systemStatus);
+    		getCurrent_Time(&cTime);
+    		snprintf(systemReadyTime, sizeof(systemReadyTime),"%d", (int)cTime.tv_sec);
+    		WebcfgInfo("systemReadyTime is %s\n", systemReadyTime);
+		set_global_systemReadyTime(systemReadyTime);
 		// wait for upstream subscriber for 5mins
 		waitForUpstreamEventSubscribe(300);
+		#ifdef WAN_FAILOVER_SUPPORTED
+		subscribeTo_CurrentActiveInterface_Event();
+		#endif
 		ret = rbus_GetValueFromDB( PARAM_RFC_ENABLE, &strValue );
 		if (ret == 0)
 		{
@@ -115,6 +124,11 @@ int main()
 	curl_global_cleanup();
 	WebcfgInfo("Exiting webconfig main thread!!\n");
 	return 1;
+}
+
+const char *rdk_logger_module_fetch(void)
+{
+    return "LOG.RDK.WEBCONFIG";
 }
 
 /*----------------------------------------------------------------------------*/

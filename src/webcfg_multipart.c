@@ -148,6 +148,18 @@ char *get_global_ETAG(void)
     return g_ETAG;
 }
 
+#ifdef WAN_FAILOVER_SUPPORTED
+void set_global_interface(char * value)
+{
+     strncpy(g_interface, value, sizeof(g_interface)-1);
+}	
+
+char * get_global_interface(void)
+{
+     return g_interface;
+}     
+#endif
+
 /*----------------------------------------------------------------------------*/
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
@@ -160,7 +172,7 @@ void addToDBList(webconfig_db_data_t *webcfgdb);
 char* generate_trans_uuid();
 WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id);
 void loadInitURLFromFile(char **url);
-static void get_webCfg_interface(char **interface);
+void get_webCfg_interface(char **interface);
 
 #ifdef FEATURE_SUPPORT_AKER
 WEBCFG_STATUS checkAkerDoc();
@@ -304,8 +316,14 @@ WEBCFG_STATUS webcfg_http_request(char **configData, int r_count, int status, lo
 		res = curl_easy_setopt(curl, CURLOPT_TIMEOUT, CURL_TIMEOUT_SEC);
 		WebcfgDebug("fetching interface from device.properties\n");
 		if(strlen(g_interface) == 0)
-		{
-			get_webCfg_interface(&interface);
+		{   
+		        #ifdef WAN_FAILOVER_SUPPORTED	
+				interface = getInterfaceName();
+				WebcfgInfo("Interface fetched from getInterfaceName is %s\n", interface);
+			#else	
+				get_webCfg_interface(&interface);
+				WebcfgInfo("Interface fetched from Device.properties is %s\n", interface);
+			#endif
 			if(interface !=NULL)
 		        {
 		               strncpy(g_interface, interface, sizeof(g_interface)-1);
@@ -572,7 +590,7 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 #ifdef FEATURE_SUPPORT_AKER
 	int backoffRetryTime = 0;
 	int max_retry_sleep = 0;
-	int backoff_max_time = 6;
+	int backoff_max_time = 7; // Increased backoff to 127s to handle aker max 85s timeout when NTP sync is delayed
 	int c=4;
 	multipartdocs_t *akerIndex = NULL;
 	int akerSet = 0;
@@ -622,6 +640,16 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 	{
 		ret = WDMP_FAILURE;
 		err = 0;
+
+		WebcfgDebug("check global mp\n");
+		multipartdocs_t *temp_mp = NULL;
+		temp_mp = get_global_mp();
+
+		if(temp_mp == NULL)
+		{
+			WebcfgInfo("mp cache list is empty. Exiting from subdoc processing.\n");
+			break;
+		}
 
 		webconfig_tmp_data_t * subdoc_node = NULL;
 		subdoc_node = getTmpNode(mp->name_space);
@@ -718,14 +746,6 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 						//Update doc trans_id to validate events.
 						WebcfgDebug("Update doc trans_id to validate events.\n");
 						updateTmpList(subdoc_node, mp->name_space, mp->etag, "pending", "none", 0, doc_transId, 0);
-						//If request type is BLOB, start event handler thread to process various error handling operations based on the events received from components.
-						if(eventFlag == 0)
-						{
-							WebcfgInfo("starting initEventHandlingTask\n");
-							initEventHandlingTask();
-							processWebcfgEvents();
-							eventFlag = 1;
-						}
 					}
 					else
 					{
@@ -1172,7 +1192,7 @@ void stripspaces(char *str, char **final_str)
 	*final_str = str;
 }
 
-static void get_webCfg_interface(char **interface)
+void get_webCfg_interface(char **interface)
 {
 #if ! defined(DEVICE_EXTENDER)
         FILE *fp = fopen(DEVICE_PROPS_FILE, "r");
@@ -1731,6 +1751,7 @@ void createCurlHeader( struct curl_slist *list, struct curl_slist **header_list,
 
         if(strlen(g_systemReadyTime) ==0)
         {
+
                 systemReadyTime = get_global_systemReadyTime();
                 if(systemReadyTime !=NULL)
                 {
@@ -1745,7 +1766,7 @@ void createCurlHeader( struct curl_slist *list, struct curl_slist **header_list,
                 systemReadyTime_header = (char *) malloc(sizeof(char)*MAX_BUF_SIZE);
                 if(systemReadyTime_header !=NULL)
                 {
-	                snprintf(systemReadyTime_header, MAX_BUF_SIZE, "X-System-Ready-Time: %s", g_systemReadyTime);
+			snprintf(systemReadyTime_header, MAX_BUF_SIZE, "X-System-Ready-Time: %s", g_systemReadyTime);
 	                WebcfgInfo("systemReadyTime_header formed %s\n", systemReadyTime_header);
 	                list = curl_slist_append(list, systemReadyTime_header);
 	                WEBCFG_FREE(systemReadyTime_header);

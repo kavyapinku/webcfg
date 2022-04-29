@@ -44,7 +44,9 @@
 
 
 #ifdef MULTIPART_UTILITY
-#ifdef BUILD_YOCTO
+#ifdef DEVICE_EXTENDER
+#define TEST_FILE_LOCATION              "/usr/opensync/data/multipart.bin"
+#elif BUILD_YOCTO
 #define TEST_FILE_LOCATION		"/nvram/multipart.bin"
 #else
 #define TEST_FILE_LOCATION		"/tmp/multipart.bin"
@@ -61,7 +63,9 @@
 pthread_mutex_t sync_mutex=PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t sync_condition=PTHREAD_COND_INITIALIZER;
 bool g_shutdown  = false;
+bool webcfgReady = false;
 bool bootSyncInProgress = false;
+bool maintenanceSyncInProgress = false;
 pthread_t* g_mpthreadId;
 #ifdef MULTIPART_UTILITY
 static int g_testfile = 0;
@@ -125,9 +129,20 @@ void *WebConfigMultipartTask(void *status)
 	//To disable supplementary sync for RDKV platforms
 #if !defined(RDK_PERSISTENT_PATH_VIDEO)
 	initMaintenanceTimer();
+
+	//The event handler intialisation is disabled in RDKV platforms as blob type is not applicable
+	if(get_global_eventFlag() == 0)
+	{
+		WebcfgInfo("Starting initEventHandlingTask\n");
+		initEventHandlingTask();
+		processWebcfgEvents();
+		set_global_eventFlag();
+	}
 #endif
 	//For Primary sync set flag to 0
 	set_global_supplementarySync(0);
+	WebcfgInfo("Webconfig is ready to process requests. set webcfgReady to true\n");
+	set_webcfgReady(true);
 	set_bootSync(true);
 	processWebconfgSync((int)Status, NULL);
 
@@ -171,6 +186,8 @@ void *WebConfigMultipartTask(void *status)
 		{
 			if(maintenance_doc_sync == 1 && checkMaintenanceTimer() == 1 )
 			{
+				WebcfgInfo("Maintenance window started. set maintenanceSync to true\n");
+				set_maintenanceSync(true);
 				char *ForceSyncDoc = NULL;
 				char* ForceSyncTransID = NULL;
 				getForceSync(&ForceSyncDoc, &ForceSyncTransID);
@@ -247,6 +264,8 @@ void *WebConfigMultipartTask(void *status)
 		if(retry_flag == 1 || maintenance_doc_sync == 1)
 		{
 			WebcfgDebug("B4 sync_condition pthread_cond_timedwait\n");
+			set_maintenanceSync(false);
+			WebcfgInfo("reset maintenanceSync to false\n");
 			rv = pthread_cond_timedwait(&sync_condition, &sync_mutex, &ts);
 			WebcfgDebug("The retry flag value is %d\n", get_doc_fail());
 			WebcfgDebug("The value of rv %d\n", rv);
@@ -354,9 +373,12 @@ void *WebConfigMultipartTask(void *status)
 	JoinThread (get_global_client_threadid());
 #endif
 	reset_global_eventFlag();
+	WebcfgDebug("set webcfgReady to false during shutdown\n");
+	set_webcfgReady(false);
 	set_doc_fail(0);
 	reset_numOfMpDocs();
 	reset_successDocCount();
+	set_maintenanceSync(false);
 	set_global_maintenance_time(0);
 	set_global_retry_timestamp(0);
 	set_retry_timer(0);
@@ -410,6 +432,16 @@ void set_global_shutdown(bool shutdown)
     g_shutdown = shutdown;
 }
 
+bool get_webcfgReady()
+{
+    return webcfgReady;
+}
+
+void set_webcfgReady(bool ready)
+{
+   webcfgReady  = ready;
+}
+
 bool get_bootSync()
 {
     return bootSyncInProgress;
@@ -418,6 +450,16 @@ bool get_bootSync()
 void set_bootSync(bool bootsync)
 {
    bootSyncInProgress  = bootsync;
+}
+
+bool get_maintenanceSync()
+{
+    return maintenanceSyncInProgress;
+}
+
+void set_maintenanceSync(bool maintenancesync)
+{
+   maintenanceSyncInProgress  = maintenancesync;
 }
 
 #ifdef MULTIPART_UTILITY
@@ -492,6 +534,7 @@ void processWebconfgSync(int status, char* docname)
 		WebcfgInfo("webcfg_http_request BACKOFF_SLEEP_DELAY_SEC is %d seconds\n", BACKOFF_SLEEP_DELAY_SEC);
 		sleep(BACKOFF_SLEEP_DELAY_SEC);
 		retry_count++;
+		r_count++;
 		if(retry_count <= 3)
 		{
 			WebcfgInfo("Webconfig curl retry_count to server is %d\n", retry_count);

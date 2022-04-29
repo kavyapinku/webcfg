@@ -39,6 +39,9 @@ char * getDeviceBootTime();
 char * getSerialNumber();
 char * getProductClass();
 char * getModelName();
+#ifdef WAN_FAILOVER_SUPPORTED
+char * getInterfaceName();
+#endif
 char * getPartnerID();
 char * getAccountID();
 char * getConnClientParamName();
@@ -49,6 +52,7 @@ char * getFirmwareUpgradeStartTime();
 char * getFirmwareUpgradeEndTime();
 /* Getter function to return systemReadyTime in UTC format */
 char *get_global_systemReadyTime();
+void set_global_systemReadyTime(char* systemReadyTime);
 
 /* Function that gets the values from TR181 dml layer */
 int setForceSync(char* pString, char *transactionId,int *session_status);
