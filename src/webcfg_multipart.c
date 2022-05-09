@@ -126,7 +126,7 @@ WEBCFG_STATUS webcfg_http_request(char **configData, int r_count, int status, lo
 	char *ct = NULL;
 	char *webConfigURL = NULL;
 	char *transID = NULL;
-	char docList[512] = {'\0'};
+	char docList[246] = {'\0'};
 	char configURL[256] = { 0 };
 	char c[] = "{mac}";
 	int rv = 0;
@@ -444,7 +444,7 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 	param_t *reqParam = NULL;
 	WDMP_STATUS ret = WDMP_FAILURE;
 	WDMP_STATUS errd = WDMP_FAILURE;
-	char errDetails[MAX_VALUE_LEN]={0};
+	char errDetails[115]={0};
 	char result[MAX_VALUE_LEN]={0};
 	int ccspStatus=0;
 	int paramCount = 0;
@@ -455,7 +455,7 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
         //size_t blob_len = -1 ;
 	char * trans_id = NULL;
 	uint16_t doc_transId = 0;
-
+	char errDetails1[113]={0};
 	if(transaction_id !=NULL)
 	{
 		trans_id = strdup(transaction_id);
@@ -602,7 +602,7 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 						if((ccspStatus == CCSP_CRASH_STATUS_CODE) || (ccspStatus == 204) || (ccspStatus == 191))
 						{
 							WebcfgDebug("ccspStatus is %d\n", ccspStatus);
-							snprintf(result,MAX_VALUE_LEN,"crash_retrying:%s", errDetails);
+							snprintf(result,MAX_VALUE_LEN,"crash_retrying:%s", errDetails1);
 							WebcfgDebug("The result is %s\n",result);
 							updateTmpList(subdoc_node, mp->entries[m].name_space, mp->entries[m].etag, "failed", result, ccspStatus, 0, 1);
 							addWebConfgNotifyMsg(mp->entries[m].name_space, mp->entries[m].etag, "failed", result, trans_id,0,"status",ccspStatus);

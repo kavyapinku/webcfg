@@ -216,7 +216,6 @@ void* processWebConfgNotification()
 				if (stringifiedNotifyPayload != NULL && strlen(device_id) != 0)
 				{
 					source = (char*) malloc(sizeof(char) * sizeof(device_id));
-					strncpy(source, device_id, sizeof(device_id));
 					WebcfgDebug("source is %s\n", source);
 					WebcfgInfo("stringifiedNotifyPayload is %s\n", stringifiedNotifyPayload);
 					//stringifiedNotifyPayload, source to be freed by sendNotification

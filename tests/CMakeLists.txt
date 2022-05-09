@@ -73,6 +73,16 @@ add_executable(test_lanunpack test_lanunpack.c ../src/lan_param.c ../src/comp_he
 target_link_libraries (test_lanunpack -lcunit -lmsgpackc -lcimplog -ltrower-base64)
 
 target_link_libraries (test_lanunpack gcov -Wl,--no-as-needed )
+
+#-------------------------------------------------------------------------------
+#   test_cellunpack
+#-------------------------------------------------------------------------------
+add_test(NAME test_cellunpack COMMAND ${MEMORY_CHECK} ./test_cellunpack)
+add_executable(test_cellunpack test_cellunpack.c ../src/cell_param.c ../src/comp_helpers.c)
+target_link_libraries (test_cellunpack -lcunit -lmsgpackc -lcimplog -ltrower-base64)
+
+target_link_libraries (test_cellunpack gcov -Wl,--no-as-needed )
+
 #-------------------------------------------------------------------------------
 #   test_wanunpack
 #-------------------------------------------------------------------------------

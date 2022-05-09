@@ -764,14 +764,14 @@ WEBCFG_STATUS retryMultipartSubdoc(webconfig_tmp_data_t *docNode, char *docName)
 	param_t *reqParam = NULL;
 	WDMP_STATUS ret = WDMP_FAILURE;
 	WDMP_STATUS errd = WDMP_FAILURE;
-	char errDetails[MAX_VALUE_LEN]={0};
+	char errDetails[115]={0};
 	char result[MAX_VALUE_LEN]={0};
 	int ccspStatus=0;
 	int paramCount = 0;
 	uint16_t doc_transId = 0;
 	webcfgparam_t *pm = NULL;
 	multipart_t *gmp = NULL;
-
+	char errDetails1[112]={0};
 	gmp = get_global_mp();
 
 	if(gmp ==NULL)
@@ -872,7 +872,7 @@ WEBCFG_STATUS retryMultipartSubdoc(webconfig_tmp_data_t *docNode, char *docName)
 						if((ccspStatus == 192) || (ccspStatus == 204) || (ccspStatus == 191))
 						{
 							WebcfgError("ccspStatus is crash %d\n", ccspStatus);
-							snprintf(result,MAX_VALUE_LEN,"failed_retrying:%s", errDetails);
+							snprintf(result,MAX_VALUE_LEN,"failed_retrying:%s", errDetails1);
 							WebcfgDebug("The result is %s\n",result);
 							updateTmpList(docNode, gmp->entries[m].name_space, gmp->entries[m].etag, "pending", result, ccspStatus, 0, 1);
 							addWebConfgNotifyMsg(gmp->entries[m].name_space, gmp->entries[m].etag, "pending", result, get_global_transID(), 0,"status",ccspStatus);
