@@ -162,29 +162,29 @@ void cellUnpack(char *blob)
 				printf("\n");
 				printf("Cellularconfig { \n");
 				printf("\tcd->CellularModemEnable: %s\n", (1 == cd->cellular_modem_enable)?"true":"false");
+				printf("MnoProfileTable : [\n{\n");
 				for(i =0; i< (int) cd->table_param->entries_count; i++)
 				{
-					printf("MnoProfileTable : [\n{\n");
-					printf("\tcd->MnoName: %s\n",cd->table_param->entries[i].mno_name);	
-					printf("\tcd->Enable: %s\n", (1 == cd->table_param->entries->mno_enable)?"true":"false");
-					printf("\tcd->Iccid: %s\n",cd->table_param->entries[i].mno_iccid);	
+					printf("\tcd->table_param->entries[%d].mno_name : %s\n",i, cd->table_param->entries[i].mno_name);	
+					printf("\tcd->table_param->entries[%d].mno_enable: %s\n",i, (1 == cd->table_param->entries->mno_enable)?"true":"false");
+					printf("\tcd->table_param->entries[%d].mno_iccid : %s\n",i, cd->table_param->entries[i].mno_iccid);	
 				}
 				printf("}\n],\n");
 				printf("InterfaceTable : [\n{\n");	
 				for(j =0; j< (int) cd->table_param1->entries_count; j++)
 				{	
-					printf("\tcd->Enable: %s\n", (1 == cd->table_param1->entries->int_enable)?"true":"false");
-					printf("\tcd->RoamingEnable: %s\n", (1 == cd->table_param1->entries->int_roaming_enable)?"true":"false");
+					printf("\tcd->table_param1->entries[%d].int_enable : %s\n",j, (1 == cd->table_param1->entries->int_enable)?"true":"false");
+					printf("\tcd->table_param1->entries[%d].int_roaming_enable : %s\n",j, (1 == cd->table_param1->entries->int_roaming_enable)?"true":"false");
 				}
 			printf("}\n],\n");	printf("AccessPointProfileTable : [\n{\n");
 				for(k =0; k< (int) cd->table_param2->entries_count; k++)
 				{	
-					printf("\tcd->MnoName: %s\n",cd->table_param2->entries[k].access_mno_name);
-					printf("\tcd->Enable: %s\n", (1 == cd->table_param2->entries->access_enable)?"true":"false");
-					printf("\tcd->RoamingEnable: %s\n", (1 == cd->table_param2->entries->access_roaming_enable)?"true":"false");
-					printf("\tcd->Apn: %s\n",cd->table_param2->entries[k].access_apn);
-					printf("\tcd->ApnAuthentication: %s\n",cd->table_param2->entries[k].access_apnauthentication);
-					printf("\tcd->IpAddressFamily: %s\n",cd->table_param2->entries[k].access_ipaddressfamily);
+					printf("\tcd->table_param2->entries[%d].access_mno_name : %s\n",k, cd->table_param2->entries[k].access_mno_name);
+					printf("\tcd->table_param2->entries[%d].access_enable : %s\n",k, (1 == cd->table_param2->entries->access_enable)?"true":"false");
+					printf("\tcd->table_param2->entries[%d].access_roaming_enable : %s\n",k, (1 == cd->table_param2->entries->access_roaming_enable)?"true":"false");
+					printf("\tcd->table_param2->entries[%d].access_apn : %s\n",k, cd->table_param2->entries[k].access_apn);
+					printf("\tcd->table_param2->entries[%d].access_apnauthentication : %s\n",k, cd->table_param2->entries[k].access_apnauthentication);
+					printf("\tcd->table_param2->entries[%d].access_ipaddressfamily : %s\n",k, cd->table_param2->entries[k].access_ipaddressfamily);
 				}
 				printf("}\n]\n}\n");
 			}
