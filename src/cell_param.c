@@ -180,17 +180,20 @@ int process_mnoparams( mnoMapping_t *e, msgpack_object_map *map )
                      e->mno_name = strndup( p->val.via.str.ptr, p->val.via.str.size );
                      objects_left &= ~(1 << 0);
                  }
-                 if( 0 == match(p, "Enable") )
-                 {
-                     e->mno_enable = strndup( p->val.via.str.ptr, p->val.via.str.size );
-                     objects_left &= ~(1 << 2);
-                 }
 		  if( 0 == match(p, "Iccid") )
                  {
                      e->mno_iccid = strndup( p->val.via.str.ptr, p->val.via.str.size );
                      objects_left &= ~(1 << 1);
                  }
 		
+              }
+              if( MSGPACK_OBJECT_BOOLEAN == p->val.type )
+              {
+                 if( 0 == match(p, "Enable") )
+                 {
+                     e->mno_enable = p->val.via.boolean;
+                     objects_left &= ~(1 << 2);
+                 }
               }
              
         }
@@ -216,16 +219,16 @@ int process_interfaceparams( interfaceMapping_t *e, msgpack_object_map *map )
     {
         if( MSGPACK_OBJECT_STR == p->key.type )
         {
-              if(MSGPACK_OBJECT_STR == p->val.type)
+              if( MSGPACK_OBJECT_BOOLEAN == p->val.type )
               {
                  if( 0 == match(p, "Enable") )
                  {
-                     e->int_enable = strndup( p->val.via.str.ptr, p->val.via.str.size );
+                     e->int_enable = p->val.via.boolean;
                      objects_left &= ~(1 << 0);
                  }
 		  if( 0 == match(p, "RoamingEnable") )
                  {
-                     e->int_roaming_enable = strndup( p->val.via.str.ptr, p->val.via.str.size );
+                     e->int_roaming_enable = p->val.via.boolean;
                      objects_left &= ~(1 << 1);
                  }
 		
@@ -260,16 +263,6 @@ int process_accessparams( accessMapping_t *e, msgpack_object_map *map )
                      e->access_mno_name = strndup( p->val.via.str.ptr, p->val.via.str.size );
                      objects_left &= ~(1 << 0);
                  }
-                 if( 0 == match(p, "Enable") )
-                 {
-                     e->access_enable = strndup( p->val.via.str.ptr, p->val.via.str.size );
-                     objects_left &= ~(1 << 5);
-                 }
-		  if( 0 == match(p, "RoamingEnable") )
-                 {
-                     e->access_roaming_enable = strndup( p->val.via.str.ptr, p->val.via.str.size );
-                     objects_left &= ~(1 << 4);
-                 }
                  if( 0 == match(p, "Apn") )
                  {
                      e->access_apn = strndup( p->val.via.str.ptr, p->val.via.str.size );
@@ -284,6 +277,20 @@ int process_accessparams( accessMapping_t *e, msgpack_object_map *map )
                  {
                      e->access_ipaddressfamily = strndup( p->val.via.str.ptr, p->val.via.str.size );
                      objects_left &= ~(1 << 1);
+                 }
+		
+              }
+              if( MSGPACK_OBJECT_BOOLEAN == p->val.type )
+              {
+                 if( 0 == match(p, "Enable") )
+                 {
+                     e->access_enable = p->val.via.boolean;
+                     objects_left &= ~(1 << 5);
+                 }
+		  if( 0 == match(p, "RoamingEnable") )
+                 {
+                     e->access_roaming_enable = p->val.via.boolean;
+                     objects_left &= ~(1 << 4);
                  }
 		
               }
