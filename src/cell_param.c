@@ -52,10 +52,13 @@ enum {
 /*----------------------------------------------------------------------------*/
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
+/*
 int process_cellparams( celldoc_t *e, msgpack_object_map *map );
 int process_mnoparams( mnoMapping_t *e, msgpack_object_map *map );
 int process_interfaceparams( interfaceMapping_t *e, msgpack_object_map *map );
 int process_accessparams( accessMapping_t *e, msgpack_object_map *map );
+*/
+int process_cellularparams( cellularparam_t *e, msgpack_object_map *map );
 int process_celldoc( celldoc_t *cd, int num, ...); 
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
@@ -71,12 +74,12 @@ celldoc_t* celldoc_convert( const void *buf, size_t len )
 /* See celldoc.h for details. */
 void celldoc_destroy( celldoc_t *cd )
 {
-	size_t i;
+	//size_t i;
 
 	if( NULL != cd )
 	{
 
-		if( NULL != cd->table_param )
+		/*if( NULL != cd->table_param )
 		{
 			if( NULL != cd->table_param->entries )
 			{
@@ -121,7 +124,7 @@ void celldoc_destroy( celldoc_t *cd )
 				free(cd->table_param2->entries);
 			}
 			free(cd->table_param2);
-		}
+		}*/
 		if( NULL != cd->subdoc_name )
 		{
 			free( cd->subdoc_name );
@@ -163,6 +166,7 @@ const char* celldoc_strerror( int errnum )
  *
  *  @return 0 on success, error otherwise
  */
+ /*
 int process_mnoparams( mnoMapping_t *e, msgpack_object_map *map )
 {
     int left = map->size;
@@ -307,6 +311,7 @@ int process_accessparams( accessMapping_t *e, msgpack_object_map *map )
    
     return (0 == objects_left) ? 0 : -1;
 }
+*/
 /**
  *  Convert the msgpack map into the doc_t structure.
  *
@@ -315,6 +320,7 @@ int process_accessparams( accessMapping_t *e, msgpack_object_map *map )
  *
  *  @return 0 on success, error otherwise
  */
+ /*
 int process_cellparams( celldoc_t *e, msgpack_object_map *map )
 {
     int left = map->size;
@@ -471,6 +477,49 @@ int process_cellparams( celldoc_t *e, msgpack_object_map *map )
    
     return (0 == objects_left) ? 0 : -1;
 }
+*/
+/*----------------------------------------------------------------------------*/
+/*                             Internal functions                             */
+/*----------------------------------------------------------------------------*/
+/**
+ *  Convert the msgpack map into the doc_t structure.
+ *
+ *  @param e    the entry pointer
+ *  @param map  the msgpack map pointer
+ *
+ *  @return 0 on success, error otherwise
+ */
+int process_cellularparams( cellularparam_t *e, msgpack_object_map *map )
+{
+    int left = map->size;
+    uint8_t objects_left = 0x01;
+    msgpack_object_kv *p;
+    p = map->ptr;
+    while( (0 < objects_left) && (0 < left--) )
+    {
+        if( MSGPACK_OBJECT_STR == p->key.type )
+        {
+              if( MSGPACK_OBJECT_BOOLEAN == p->val.type )
+              {
+                if( 0 == match(p, "CellularModemEnable") )
+                {
+                    e->cellular_modem_enable = p->val.via.boolean;
+                    objects_left &= ~(1 << 0);
+                }
+            }
+        }
+           p++;
+    }
+        
+    
+    if( 1 & objects_left ) {
+    } else {
+        errno = OK;
+    }
+   
+    return (0 == objects_left) ? 0 : -1;
+}
+
 int process_celldoc( celldoc_t *cd,int num, ... )
 {
 //To access the variable arguments use va_list 
@@ -491,9 +540,26 @@ int process_celldoc( celldoc_t *cd,int num, ... )
 
 	va_end(valist);//End of variable argument loop
 
+	/*
 	if( 0 != process_cellparams(cd, mapobj) )
 	{
 		WebcfgDebug("process_cellparams failed\n");
+		return -1;
+	}
+	*/
+	
+	cd->param = (cellularparam_t *) malloc( sizeof(cellularparam_t) );
+        if( NULL == cd->param )
+        {
+	    WebcfgDebug("Entries count malloc failed\n");
+            return -1;
+        }
+        memset( cd->param, 0, sizeof(cellularparam_t));
+
+
+	if( 0 != process_cellularparams(cd->param, mapobj) )
+	{
+		WebcfgDebug("process_cellularparams failed\n");
 		return -1;
 	}
 

@@ -100,9 +100,9 @@ void cellUnpack(char *blob)
 {
 	celldoc_t *cd = NULL;
 	int err;
-	int i =0;
-	int j =0;
-	int k =0;
+	//int i =0;
+	//int j =0;
+	//int k =0;
 
 	if(blob != NULL)
 	{
@@ -159,34 +159,34 @@ void cellUnpack(char *blob)
 				printf("cd->subdoc_name: %s\n", cd->subdoc_name);
 				printf("cd->version: %lu\n", (long)cd->version);
 				printf("cd->transaction_id: %lu\n",(long) cd->transaction_id);
-				printf("\n");
-				printf("Cellularconfig { \n");
-				printf("\tcd->CellularModemEnable: %s\n", (1 == cd->cellular_modem_enable)?"true":"false");
+				printf("cd->CellularModemEnable: %s\n", (1 == cd->param->cellular_modem_enable)?"true":"false");
+/*
 				printf("MnoProfileTable : [\n{\n");
 				for(i =0; i< (int) cd->table_param->entries_count; i++)
 				{
 					printf("\tcd->table_param->entries[%d].mno_name : %s\n",i, cd->table_param->entries[i].mno_name);	
-					printf("\tcd->table_param->entries[%d].mno_enable: %s\n",i, (1 == cd->table_param->entries->mno_enable)?"true":"false");
+					printf("\tcd->table_param->entries[%d].mno_enable: %s\n",i, (1 == cd->table_param->entries[i].mno_enable)?"true":"false");
 					printf("\tcd->table_param->entries[%d].mno_iccid : %s\n",i, cd->table_param->entries[i].mno_iccid);	
 				}
 				printf("}\n],\n");
 				printf("InterfaceTable : [\n{\n");	
 				for(j =0; j< (int) cd->table_param1->entries_count; j++)
 				{	
-					printf("\tcd->table_param1->entries[%d].int_enable : %s\n",j, (1 == cd->table_param1->entries->int_enable)?"true":"false");
-					printf("\tcd->table_param1->entries[%d].int_roaming_enable : %s\n",j, (1 == cd->table_param1->entries->int_roaming_enable)?"true":"false");
+					printf("\tcd->table_param1->entries[%d].int_enable : %s\n",j, (1 == cd->table_param1->entries[j].int_enable)?"true":"false");
+					printf("\tcd->table_param1->entries[%d].int_roaming_enable : %s\n",j, (1 == cd->table_param1->entries[j].int_roaming_enable)?"true":"false");
 				}
 			printf("}\n],\n");	printf("AccessPointProfileTable : [\n{\n");
 				for(k =0; k< (int) cd->table_param2->entries_count; k++)
 				{	
 					printf("\tcd->table_param2->entries[%d].access_mno_name : %s\n",k, cd->table_param2->entries[k].access_mno_name);
-					printf("\tcd->table_param2->entries[%d].access_enable : %s\n",k, (1 == cd->table_param2->entries->access_enable)?"true":"false");
-					printf("\tcd->table_param2->entries[%d].access_roaming_enable : %s\n",k, (1 == cd->table_param2->entries->access_roaming_enable)?"true":"false");
+					printf("\tcd->table_param2->entries[%d].access_enable : %s\n",k, (1 == cd->table_param2->entries[k].access_enable)?"true":"false");
+					printf("\tcd->table_param2->entries[%d].access_roaming_enable : %s\n",k, (1 == cd->table_param2->entries[k].access_roaming_enable)?"true":"false");
 					printf("\tcd->table_param2->entries[%d].access_apn : %s\n",k, cd->table_param2->entries[k].access_apn);
 					printf("\tcd->table_param2->entries[%d].access_apnauthentication : %s\n",k, cd->table_param2->entries[k].access_apnauthentication);
 					printf("\tcd->table_param2->entries[%d].access_ipaddressfamily : %s\n",k, cd->table_param2->entries[k].access_ipaddressfamily);
 				}
 				printf("}\n]\n}\n");
+*/
 			}
 			celldoc_destroy(cd);
 		}

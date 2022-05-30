@@ -21,6 +21,19 @@
 
 typedef struct
 {
+    bool      cellular_modem_enable;       
+} cellularparam_t;
+
+typedef struct {
+    cellularparam_t  *param;       
+    char *       subdoc_name;
+    uint32_t     version;
+    uint16_t     transaction_id;
+} celldoc_t;
+
+/**
+typedef struct
+{
     char * mno_name;
     bool   mno_enable;
     char * mno_iccid;     
@@ -71,6 +84,8 @@ typedef struct {
     interfaceTable_t * table_param1;
     accesspointTable_t * table_param2;
 } celldoc_t;
+*/
+
 /**
  *  This function converts a msgpack buffer into an celldoc_t structure
  *  if possible.
